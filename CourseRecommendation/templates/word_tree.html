@@ -1,0 +1,49 @@
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+   <html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <script type="text/javascript">
+
+var comments_list = []
+
+d3.csv("{{ url_for('static', filename='master_final.csv') }} ", function(data) {
+      data.forEach(element => {
+        comments_list.push([element.comments_plain_text]);
+
+      });
+
+      console.log(comments_list);
+
+});
+
+
+
+
+
+      google.charts.load('current', {packages:['wordtree']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable(
+          comments_list
+        );
+
+        var options = {
+          wordtree: {
+            format: 'implicit',
+            word: 'cats'
+          }
+        };
+
+        var chart = new google.visualization.WordTree(document.getElementById('wordtree_basic'));
+        chart.draw(data, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="wordtree_basic" style="width: 100%; height: 100%;"></div>
+  </body>
+</html>
+   

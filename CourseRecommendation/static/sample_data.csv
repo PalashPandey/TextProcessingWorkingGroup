@@ -1,0 +1,61 @@
+kingdom,phylum_latin,phylum_common,taxon,described,known_undescribed,estimated_unknown,adventive,endemic_species,endemic_genera,notes
+Plantae,Rhodophyta,red algae,Cyanidiophyceae,1,0,0,0,0,0,
+Plantae,Rhodophyta,red algae,Compsopogonophyceae,10,0,0,0,5,2,
+Plantae,Rhodophyta,red algae,Porphyridiophyceae,1,0,0,0,0,0,
+Plantae,Rhodophyta,red algae,Stylonematophyceae,2,0,0,0,0,0,
+Plantae,Rhodophyta,red algae,Bangiophyceae,11,36,5,0,7,3,
+Plantae,Rhodophyta,red algae,Florideophyceae,447,53,30,15,178,16,
+Plantae,Chlorophyta,green algae,Mamiellophyceae,3,0,30,0,0,0,
+Plantae,Chlorophyta,green algae,Nephroselmidophyceae,2,0,15,0,0,0,
+Plantae,Chlorophyta,green algae,Pyramimonadophyceae,11,2,30,0,0,0,
+Plantae,Chlorophyta,green algae,Chlorodendrophyceae,1,0,5,0,0,0,
+Plantae,Chlorophyta,green algae,Chlorophyceae,287,4,350,1,4,0,
+Plantae,Chlorophyta,green algae,Ulvophyceae,181,11,60,9,24,2,
+Plantae,Chlorophyta,green algae,Trebouxiophyceae,81,2,120,0,1,0,
+Plantae,Charophyta,green algae,Klebsormidiophyceae,9,0,3,0,1,0,
+Plantae,Charophyta,green algae,Zygnematophyceae,496,5,50,0,39,0,
+Plantae,Charophyta,green algae,Coleochaetophyceae,6,0,2,0,0,0,
+Plantae,Charophyta,green algae,Charophyceae,16,2,5,1,3,0,
+Plantae,Bryophyta,"hornworts, liverworts, mosses",Anthocerotophyta,13,0,2,0,8,0,hornworts
+Plantae,Bryophyta,"hornworts, liverworts, mosses",Marchantiophyta,593,0,50,6,276,14,liverworts
+Plantae,Bryophyta,"hornworts, liverworts, mosses",Bryopsida,516,0,10,30,110,9,mosses
+Plantae,Tracheophyta,vascular plants,Lycopodiopsida,16,0,0,3,2,0,clubmosses and firmosses
+Plantae,Tracheophyta,vascular plants,Psilotopsida,11,0,0,0,3,0,a class of ferns
+Plantae,Tracheophyta,vascular plants,Equisetopsida,3,0,0,3,0,0,a class of ferns
+Plantae,Tracheophyta,vascular plants,Marattiopsida,1,0,0,0,0,0,a class of ferns
+Plantae,Tracheophyta,vascular plants,Polypodiopsida,216,1,7,46,82,3,a class of ferns
+Plantae,Tracheophyta,vascular plants,Ginkgoopsida,1,0,0,1,0,0,gingko
+Plantae,Tracheophyta,vascular plants,Pinopsida,60,0,0,40,20,2,confiers
+Plantae,Tracheophyta,vascular plants,Magnoliopsida,4436,0,350,2430,1628,48,a class of flowering plants
+Fungi,Chytridiomycota,chytrids,Blastocladiomycota,12,1,15,3,0,0,
+Fungi,Chytridiomycota,chytrids,Chytridiomycota,133,0,150,9,7,0,
+Fungi,Chytridiomycota,chytrids,Neocallimastigomycota,5,0,10,1,0,0,
+Fungi,Microsporidia,spore-forming parasites,Microsporidia,12,6,9000,6,5,1,
+Fungi,Zygomyota,pin moulds,Zygomyota,89,0,170,19,10,0,
+Fungi,Glomeromycota,arbuscular mycorrhiza,Glomeromycota,38,1,5,2,0,0,
+Fungi,Ascomycota,sac fungi,Incertae sedis,296,7,2500,61,65,2,
+Fungi,Ascomycota,sac fungi,Arthoniomycetes,102,1,100,0,34,0,
+Fungi,Ascomycota,sac fungi,Dothideomycetes,1155,10,2500,660,157,1,
+Fungi,Ascomycota,sac fungi,Eurotiomycetes,287,2,500,51,16,0,
+Fungi,Ascomycota,sac fungi,Laboulbeniomycetes,33,4,200,0,25,1,
+Fungi,Ascomycota,sac fungi,Lecanoromycetes,1406,3,100,2,162,1,
+Fungi,Ascomycota,sac fungi,Leotiomycetes,509,24,500,177,138,5,
+Fungi,Ascomycota,sac fungi,Lichinomycetes,11,0,10,0,0,0,
+Fungi,Ascomycota,sac fungi,Orbiliomycetes,22,0,20,8,1,0,
+Fungi,Ascomycota,sac fungi,Pezizomycetes,167,1,20,78,19,1,
+Fungi,Ascomycota,sac fungi,Sordariomycetes,1165,27,2500,416,163,2,
+Fungi,Ascomycota,sac fungi,Saccharomycetes,77,0,100,26,0,0,
+Fungi,Ascomycota,sac fungi,Pneumocystidomycetes,1,0,5,1,0,0,
+Fungi,Ascomycota,sac fungi,Schizosaccharomycetes,1,0,5,0,0,0,
+Fungi,Ascomycota,sac fungi,Taphrinomycetes,6,0,5,5,0,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Agaricomycetes,2030,259,5000,282,740,6,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Dacrymycetes,27,0,20,0,4,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Tremellomycetes,49,0,20,9,7,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Entorhizomycetes,7,0,5,1,2,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Agaricostilbomycetes,6,0,5,0,1,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Atractiellomycetes,5,0,5,0,0,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Classiculomycetes,1,0,5,0,0,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Microbotryomycetes,30,0,20,6,0,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Pucciniomycetes,253,2,15,121,91,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Exobasidiomycetes,51,0,5,37,5,0,
+Fungi,Basidiomycota,"mushrooms, rusts, smuts",Ustilaginomycetes,56,2,10,25,11,0,

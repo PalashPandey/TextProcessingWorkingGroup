@@ -1,0 +1,843 @@
+/**	
+ * 
+ * Application class
+ * 
+ */
+function Application() {
+    this.current_page_id = 1;
+    this.layoutManager = new DefaultLayoutManager();
+    this.pages = new Array();
+    this.filter_params = new Array();
+    this.widgets = new Array();
+    this.properties = new Object();
+    this.selectedBars = new Object();
+    /**
+     * 
+     * gets specified page
+     * 
+     */
+    this.getPage = function(id) {
+        return this.pages[id - 1];
+    };
+
+    /**
+     * 
+     * gets current page
+     * 
+     */
+    this.getCurrentPage = function() {
+        return this.getPage(this.current_page_id);
+    };
+
+    /**
+     * 
+     * gets specified widget
+     * 
+     */
+
+    this.getWidget = function(id) {
+        return new Utils().getObjectByID(this.widgets, id);
+    };
+
+    /**
+     * 
+     * gets specified filter param
+     * 
+     */
+
+    this.getFilterParam = function(id) {
+        return new Utils().getObjectByID(this.filter_params, id);
+    };
+
+    /**
+     * 
+     * load application from JSON
+     * 
+     */
+    this.load = function(appJSON, layoutManager) {
+        this.pages = appJSON.pages;
+        this.filter_params = appJSON.filter_params;
+        this.properties = appJSON.properties;
+        this.widgets = appJSON.widgets;
+        if (layoutManager != null)
+            this.layoutManager = layoutManager;
+
+        this.refreshPage(1);
+
+    }
+    
+    this.populateFilterParams =function(filterID,data)
+    {
+    	var filterJsonData,filterID,options;
+    	for(i=0;i<data.length;i++)
+    		{
+    		filterJsonData=data[i];
+    		filterID=filterJsonData.filterID;
+    		options=filterJsonData.options;
+    		var filter=document.getElementById("filter_"+filterID);
+    		var paramDef = this.getFilterParam(filterID);
+    		//console.log(JSON.stringify(paramDef));
+    		var type=paramDef.properties.gui_type;
+    		if(type=="listbox")
+    			{
+    		$(filter).empty();
+    		$(filter).append($('<option>', { 
+		        text: "",
+		        },'</option>'));
+    		$.each(options, function (i, option) {
+    			$(filter).append($('<option>', { 
+    		        text: option.caption,
+    		        value : option.value 
+    		    },'</option>'));
+    		});
+			
+			// TODO : [Arnab] need to remove hard code val
+			if(2 == filterID){				
+				// $("#filter_2").val("16");
+    		}else if(3 == filterID){
+			   	$("#filter_3").val("annotate")	
+			}
+				}
+    		else if(type=="checkbox")
+    		{
+    			$.each(options, function (i, option) {
+    				if(option.caption){
+    					var itemDiv = document.createElement ("div");
+        				var label = document.createElement('label');
+        				var ck = document.createElement ("input");
+        				var node = document.createTextNode(option.caption);
+        				
+        				itemDiv.setAttribute("class", "item group-checkbox");
+        				itemDiv.setAttribute("id", "filter_checkbox");
+        				
+        				label.setAttribute("for", paramDef.properties.name + '_' + i);
+        				label.setAttribute("class", "fa");
+        				
+        				ck.setAttribute("name", paramDef.properties.name);
+        				ck.setAttribute("id", paramDef.properties.name + '_' + i);
+        				ck.setAttribute("type", type);
+        				ck.setAttribute("value", option.value);
+        				
+        				itemDiv.appendChild(ck);
+        				label.appendChild(node);
+        				itemDiv.appendChild(label);
+        				
+        				$(filter).append($(itemDiv));
+    				}
+        		});
+    			
+    		}
+    	}
+    	
+    	
+    }
+    /**
+     * 
+     * refreshes specified page
+     * 
+     */
+    this.refreshPage = function(page_id) {
+        this.current_page_id = page_id;
+
+        // layout current page
+        this.layoutManager.layoutPage(this, "");
+
+        var current_page = this.getCurrentPage();
+
+        // create all widgets required
+        current_page.widgetWrappers = new Array();
+        var numwidgets = current_page.widgets.length;
+        for (j = 0; j < numwidgets; j++) {
+            var widgetDef = this.getWidget(current_page.widgets[j]);
+            console.log("WidgetDef=" + current_page.widgets[j]);
+            if (this.getWidgetWrapper (widgetDef.id) == null)
+            	current_page.widgetWrappers.push(new WidgetWrapper(widgetDef, "report_" +
+            			widgetDef.id))
+
+            this.addListeners();
+        }
+    
+        /*populate FilterParams
+        All filterParams on the current page without any pre-data*/
+        m_Controller.populateFilterParams(page_id,null,null);
+
+        // get results
+        m_Controller.getResults();
+        // create all filters required
+        current_page.filterWrappers = new Array();
+        
+        //Add listeners to filter
+        var numParams=current_page.filter_params.length;
+        
+        for (j = 0; j < numParams; j++) {
+        	//console.log("number of filters="+numParams);
+            var paramDef = this.getFilterParam(current_page.filter_params[j]);
+            //console.log("paramDef=" + JSON.stringify(paramDef));
+            //console.log("filter_paramsID=" + current_page.filter_params[j]);
+            current_page.filterWrappers.push(new filterWrapper(paramDef, "filter_" +
+            		paramDef.id));
+            //console.log("filterWrapper="+JSON.stringify(this.getfilterWrapper(paramDef.id)));
+            this.addFilterListeners();
+        }
+
+    };
+
+    /**
+     * 
+     * refresh results (callback function after controller gets data from
+     * server)
+     * 
+     * @param data data to refresh widget(s)
+     * @callback callback function to be called after refresh
+     */
+    this.refreshResults = function(data) {
+        console.log("In Application.js.refreshResults()");
+        // display alert message if required
+        if ((data.results) && (data.results.length > 0)){
+	        if (data.results[0].alert != null){
+	        	alert (data.results[0].alert);
+	        	m_Controller.getResults();
+	        }
+	        else{
+		        var i;
+		        var curr_page = this.getCurrentPage();
+		        for (i = 0; i < curr_page.widgetWrappers.length; i++)
+		            curr_page.widgetWrappers[i].refreshResults(data);
+	        }
+    	}
+        console.log("In Application.js.refreshResults() End of Application load");
+    };
+
+    /**
+     * 
+     * 
+     * handles click on a widget
+     * 
+     */
+    this.drilldown = function(widgetID, category, data, series) {
+    	console.log(widgetID + ", " + category + ", " + data + ", " + series);
+        var page = this.getCurrentPage();
+        var listeners = this.getWidgetWrapper(widgetID).listeners;
+        var i;
+        // check whether object has been clicked before
+        if (this.selectedBars[widgetID] == null) {
+            this.selectedBars[widgetID] = new Object();
+            this.selectedBars[widgetID].selected = category;
+        } else {
+            if ((this.selectedBars[widgetID].selected == null) || (this.selectedBars[widgetID].selected != category))
+                this.selectedBars[widgetID].selected = category;
+            else
+                this.selectedBars[widgetID].selected = null;
+        }
+        var selected = (this.selectedBars[widgetID].selected == null) ? false : true;
+
+        for (i = 0; i < listeners.length; i++) {
+            var fn = listeners[i].handler;
+            // call the listener function with the widgetID and data
+            // eval (fn + "()");
+            window[fn](listeners[i].tgt_id, category, data, selected, series);
+        }
+    };
+
+    /**
+     * 
+     * handles changes in FilterParams
+     * 
+     */
+    this.filterdrilldown = function(filterID) {
+    	console.log("In Application.js.filterdrilldown");
+    	console.log("filterID="+filterID);
+    	var value=$("#filter_"+filterID).val();
+    	if(value== '' || value == null){
+    		return;
+    	}
+    	console.log("value="+value);
+    	var name=$("#filter_"+filterID).attr('name');
+        var page = this.getCurrentPage();
+        var filterWrapper=this.getfilterWrapper(filterID);
+        if (filterWrapper == null || filterWrapper.length < 1) {
+        	alert("filterWrapper is null");
+        }
+        var listeners = filterWrapper.listeners;
+        var i;
+  
+        for (i = 0; i < listeners.length; i++) {
+            //var fn = listeners[i].handler;
+        	var fn="triggerFilterPopulate";
+            //alert("calling function "+fn);
+            //alert("listener= "+JSON.stringify(listeners[i]));
+            // call the listener function with the widgetID and data
+            // eval (fn + "()");
+            //window[fn](listeners[i].tgt_id, name,value);
+            window[fn](filterID,name,value,listeners[i].tgt_id);
+        }
+    };
+    /**
+     * 
+     * adds listeners
+     * 
+     */
+    this.addListeners = function() {
+       // console.log("In Application.js.addListeners()");
+        var i, j;
+        var listener, eventHandlers;
+        var current_page = this.getCurrentPage();
+        for (i = 0; i < current_page.widgetWrappers.length; i++) {
+            listener = current_page.widgetWrappers[i];
+            eventHandlers = current_page.widgetWrappers[i].widget.properties.eventHandlers;
+            if (eventHandlers != null) {
+                for (j = 0; j < eventHandlers.length; j++) {
+                    var eventHandler = eventHandlers[j];
+                    // eventHandler has 2 attributes - src_widget_id and handler
+                    this.getWidgetWrapper(eventHandler.src_widget_id)
+                        .addListener(
+                            new Listener(listener.id,
+                                eventHandler.handler));
+                }
+            }
+        }
+    };
+    /**
+     * 
+     * adds listeners to filters
+     * 
+     */
+    this.addFilterListeners = function() {
+        console.log("In Application.js.addfilterListeners()");
+        var i, j;
+        var listener, eventHandlers;
+        var current_page = this.getCurrentPage();
+        for (i = 0; i < current_page.filterWrappers.length; i++) {
+            listener = current_page.filterWrappers[i];
+            console.log("filter listener or current filter="+JSON.stringify(listener));
+            eventHandlers = current_page.filterWrappers[i].properties.eventHandlers;
+            console.log("eventHandlers="+JSON.stringify(eventHandlers));
+            if (eventHandlers != null) {
+                for (j = 0; j < eventHandlers.length; j++) {
+                    var eventHandler = eventHandlers[j];
+                    // eventHandler has 2 attributes - src_filter_id and handler
+                    console.log("eventHandler="+JSON.stringify(eventHandler));
+                    console.log("filterWrapper="+this.getfilterWrapper(eventHandler.src_filter_id));
+                    this.getfilterWrapper(eventHandler.src_filter_id)
+                        .addListener(
+                            new Listener(listener.id,
+                                eventHandler.handler));
+                }
+            }
+        }
+    };
+
+    /**
+     * 
+     * gets specified widget wrapper
+     * 
+     */
+    this.getWidgetWrapper = function(id) {
+        return new Utils().getObjectByID(this.getCurrentPage().widgetWrappers, id);
+    };
+    
+
+    /**
+     * 
+     * gets specified filter wrapper
+     * 
+     */
+    this.getfilterWrapper = function(id) {
+    	console.log("in this.getfilterWrapper() id="+id);
+        return new Utils().getObjectByID(this.getCurrentPage().filterWrappers, id);
+    };
+
+};
+
+function Listener(tgt_id, handler) {
+    this.tgt_id = tgt_id;
+    this.handler = handler;
+}
+
+function WidgetWrapper(widgetDef, containerID) {
+    //console.log("in Application.js.WidgetWrapper()");
+    //console.log("widgetDef " + JSON.stringify(widgetDef));
+    //console.log("containerID " + JSON.stringify(containerID));
+    this.id = widgetDef.id;
+    this.name = widgetDef.properties.name;
+    this.family = widgetDef.properties.family;
+    this.type = widgetDef.properties.type;
+    this.containerID = containerID;
+    this.properties = widgetDef.properties;
+    this.widget = new WidgetFactory().getWidget(this.id, this.name,
+        this.family, this.type, containerID, this.properties);
+    this.widget.container = this;
+
+    this.listeners = new Array();
+    this.addListener = function(listener) {
+        this.listeners.push(listener);
+    }
+    this.refreshResults = function(data) {
+        console.log("in Application.js.WidgetWrapper.refreshResults()");
+        console.log(data);
+        var visible = this.widget.properties["visible"];
+        var type = this.widget.properties["type"];
+        if(type=="compound")
+        {
+            var i, j, k, l;
+            var res;
+            var hiddenColCount = 0;
+            var displayColCount = 0;
+            var bFound = false;
+            var numRows;
+            for (i = 0; i < data.results.length; i++) {
+                res = data.results[i];
+                if (res.id == this.id) {
+                    // separate cols to be hidden
+                    if (this.widget.properties.hiddenCols != null) {
+                    	//code for hidden columns
+                    } else {
+                        res.hiddenData = null;
+                        res.hiddenColumnNames = null;
+                    }
+                    res.column_names=res.resultset[0].column_names;
+                    
+                    console.log("Res="+JSON.stringify(res));
+                    this.widget.setJSONData(res, this.name,
+                        this.widget.properties);
+                    this.widget.render(this.containerID);
+                    break;
+                }
+            }
+            
+        }
+        else{
+	        if (((visible == null) || (visible == "true") )&& data.results[0].rows!=null) {
+	            var i, j, k, l;
+	            var res;
+	            var hiddenColCount = 0;
+	            var displayColCount = 0;
+	            var bFound = false;
+	            var numRows;
+	            for (i = 0; i < data.results.length; i++) {
+	                res = data.results[i];
+	                numRows = res.rows.length;
+	                if (res.id == this.id) {
+	                    var displayData = new Array();
+	                    for (j = 0; j < numRows; j++)
+	                        displayData[j] = new Array();
+	                    var displayColNames = new Array();
+	                    // separate cols to be hidden
+	                    if (this.widget.properties.hiddenCols != null) {
+	                        res.hiddenColumnNames = this.widget.properties.hiddenCols;
+	                        res.hiddenData = new Array();
+	                        for (j = 0; j < numRows; j++)
+	                            res.hiddenData[j] = new Array();
+	
+	                        for (j = 0; j < res.columnNames.length; j++) {
+	                            bFound = false;
+	                            for (k = 0; k < properties.hiddenCols.length; k++) {
+	                                if (res.hiddenColumnNames[k].trim() == res.columnNames[j]
+	                                    .trim()) {
+	                                    // hidden column
+	                                    bFound = true;
+	                                    for (l = 0; l < numRows; l++)
+	                                        res.hiddenData[l][hiddenColCount] = res.data[l][j];
+	                                    hiddenColCount++;
+	                                }
+	                            }
+	                            if (!bFound) {
+	                                // display column
+	                                for (l = 0; l < numRows; l++)
+	                                    displayData[l][displayColCount] = res.data[l][j];
+	                                displayColNames[displayColCount] = res.columnNames[j];
+	                                displayColCount++;
+	                            }
+	                        }
+	                        res.data = displayData;
+	                        res.columnNames = displayColNames;
+	                    } else {
+	                        res.hiddenData = null;
+	                        res.hiddenColumnNames = null;
+	                    }
+	                    //console.log("Res="+JSON.stringify(res));
+	                    this.widget.setJSONData(res, this.name,
+	                        this.widget.properties);
+	                    //console.log("Data Render for containerID" + containerID);
+	                    this.widget.render(this.containerID);
+	                    break;
+	                }
+	            }
+            }
+	        else{
+	        	//var res=JSON.parse(data)
+	        	 this.widget.setJSONData(data, this.name,
+	                        this.widget.properties);
+	                    //console.log("Data Render for containerID" + containerID);
+	                    this.widget.render(this.containerID);
+	        }
+        }
+    };
+
+}
+function filterWrapper(paramDef, containerID) {
+    //console.log("in Application.js.filterWrapper()");
+    //console.log("paramDef " + JSON.stringify(paramDef));
+    //console.log("containerID " + JSON.stringify(containerID));
+    this.id = paramDef.id;
+    this.name = paramDef.properties.name;
+    //this.family = widgetDef.properties.family;
+    this.type = paramDef.properties.gui_type;
+    this.containerID = containerID;
+    this.properties = paramDef.properties;
+    this.filter = new FilterFactory().getFilter(this.id, this.name,
+         this.type, containerID, this.properties);
+   // this.filter.container = this;
+
+    this.listeners = new Array();
+    this.addListener = function(listener) {
+        this.listeners.push(listener);
+    }
+
+
+}
+/**
+ * 
+ * Factory class to create Widgets
+ * 
+ */
+function WidgetFactory() {
+    //console.log("in Application.js.WidgetFactory()");
+    this.getWidget = function(id, name, family, type, containerID, properties) {
+        //console.log("name,family=" + name + family, properties);
+        //console.log("properties=" + family, properties);
+    	
+        var widget;
+        if (family == "FusionCharts") {
+            widget = new FusionChartsWrapper({
+                type: type,
+                width: $("#" + containerID).css("width"),
+                height: $("#" + containerID).css("height"),
+                debugMode: false
+            });
+            widget.properties = properties;
+        } else if (family == "Abzooba") {
+            widget = new AbzoobaWidgets({
+                name: name,
+                type: type,
+                id: id,
+                properties: properties
+            });
+        } else if (family == "HighCharts") {
+        	
+            // changed the way we call HighCharts constructor so that we can use if else condition for providing options . 
+            // We are creating a JSON variable named Options and initializing some propeties for all the charts 
+            // then we are checking whether any xAxis and yAxis property is defined in the JSON for that widget or not ,if it is then we are appending 
+            // these properties to previous properties fro the widget. After all this we are calling highchart functions in higchart.js
+           // var scrollbar = (properties.scrollbar) ? properties.scrollbar : {                "enabled": false            };
+            var scrollbar={"trackBackgroundColor":"white",
+            		"barBorderRadius":7,
+            		"trackBorderRadius":7,
+            		"rifleColor":"yellow",
+            		"enabled":false,
+            		"trackBorderColor":"silver",
+            		"buttonBackgroundColor":"gray",
+            		"trackBorderWidth":1,
+            		"barBackgroundColor":"gray",
+            		"barBorderWidth":0,
+            		"buttonArrowColor":"yellow",
+            		"buttonBorderRadius":7,
+            		"buttonBorderWidth":0};
+
+            $.extend(true, scrollbar, properties.scrollbar);
+            var options = {
+                chart: {
+                    type: type,
+                    width: parseInt($("#" + containerID).css("width")),
+                    height: parseInt($("#" + containerID).css("height")),
+                    renderTo: containerID
+                },
+
+                plotOptions: {
+                    series: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        stacking: null,
+                        point: {
+                            events: {
+                                click: function(e) {
+                                    m_Controller.app.drilldown(id, this.name,
+                                        this.y, this.series.name)
+                                }
+                            }
+                        }
+
+                    },
+                    //	pie:{
+                    //	innerSize:'50%'
+                    //}
+                },
+                yAxis: {
+                    reversedStacks: true
+                },
+                title: properties.title,
+                scrollbar: scrollbar,
+                tooltip: {
+                    shared: true,
+                    useHTML: true,
+                    // headerFormat: '<small>{series.name}<br/></small><table>',
+                    footerFormat: '</table>',
+                    followPointer: true,
+                    valueDecimals: 0,
+                    //borderColor: 'black',
+                    borderRadius: 5,
+                    borderWidth: 2,
+                    backgroundColor: {
+                        linearGradient: [0, 0, 0, 60],
+                        stops: [
+                            [0, '#FFFFF0'],
+                            [1, '#FAFAD2']
+                        ]
+                    }
+                },
+                /*				
+                		widget.properties.eventHandlers;
+                		 * xAxis: properties.xAxis yAxis: properties.yAxis, legend:
+                		 * properties.legend, //tooltip: {formatter:function (){return
+                		 * window[formatFunction]()}}, //tooltip: properties.tooltip,
+                		 * plotOptions: properties.plotOptions, //SRC-
+                		 * colors:properties.colors
+                		 */
+
+                credits: {
+                    enabled: false
+                },
+                legend: {
+                    enabled: true
+                }
+            };
+
+            // for pie chart and scatter chart xAxis and yAxis properties are defiend differently so we exculde them here to avoide the conflict from HighChartWrapper.js
+
+            if (type != "pie" && type != "donut" && type != "scatter" && (typeof(properties.xAxis) != "undefined")) {
+                var newoptionsx = {
+                    xAxis: properties.xAxis
+                }
+                
+                //if(properties.negativeColor!="undefined")
+                	//{
+                	
+                	
+                	//}
+            }
+            var negativeColorOptions={
+                   // className: 'main-color',
+                    negativeColor: true
+            }
+            if(properties.negativeColor==true)
+    		{
+    		$.extend(true, options.plotOptions.series, negativeColorOptions);
+    		}
+            if(properties.colors!=undefined)
+            	{
+            	$.extend(true, options, properties.colors);
+            	}
+
+            $.extend(true, options, newoptionsx);
+            if (type != "pie" && type != "donut" && type != "scatter" && (typeof(properties.yAxis) != "undefined")) {
+                var newoptionsy = {
+                    yAxis: properties.yAxis
+                }
+            }
+
+            $.extend(true, options, newoptionsy);
+
+            if (type == "donut") {
+                //console.log("Chart type=donut");
+                var pie = {
+                    pie: {
+                        innerSize: '50%'
+                    }
+                }
+                options.chart.type = "pie";
+                $.extend(true, options.plotOptions, pie);
+
+            }
+
+			var current_theme = sessionStorage.getItem('current_theme') || 'theme_1';
+			var theme_list = JSON.parse(sessionStorage.getItem('themes')) || {};
+			
+            var legend = {
+                align: 'right',
+                layout: 'vertical',
+                margin: 0,
+                verticalAlign: 'top',
+                y: 25,
+                symbolHeight: 280,
+
+            }
+            if (properties.legend == "disabled") {
+                options.legend.enabled = false;
+            }
+            if (properties.percentage == "true") {
+                options.tooltip = {
+
+                    //pointFormat: '{point.color}{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+
+                }
+            }
+            /*if(type=="stacked-column")
+            	{
+            	options.chart.type='column';
+            	options.plotOptions.series.stacking='normal';
+            	//options.tooltip.headerFormat= '<b>{point.x}</b><br/>';
+                        //pointFormat: '{point.color}{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+            	options.tooltip=
+            		{
+            			headerFormat: '<center><b>{point.x}</b></center><br/>',
+            			//pointFormat: '{point.color}{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+            			pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y}</b><br/>Total: {point.stackTotal}'
+            		}
+            	
+            	}*/
+            if (properties.stacking == "enabled") {
+                //console.log("stacking is enabled!!");
+
+                options.plotOptions.series.stacking = 'normal';
+                options.tooltip = {
+                    headerFormat: '<center><b>{point.x}</b></center><br/>',
+                    //pointFormat: '{point.color}{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+                    pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y}</b><br/>Total: {point.stackTotal}'
+                }
+                if (properties.reversedStacks == "false") {
+                    //console.log("reversedStacks=" + false);
+                    options.yAxis.reversedStacks = false;
+                }
+
+            }
+
+            if (type == "heatmap") {
+                var tooltip = {
+                    formatter: function() {
+                        return '<b>' + this.series.xAxis.categories[this.point.x] + ':' +
+                            this.point.value + ',' + this.series.yAxis.categories[this.point.y] + '</b>';
+                    }
+                }
+                var dataLabels = {
+                    dataLabels: {
+                        enabled: true,
+                        color: '#000000'
+                    }
+                }
+                var colorAxis = {
+                        colorAxis: {
+                            min: 0,
+                            minColor: '#ffffff',
+                            //maxColor: '#df4b00',
+                            maxColor: theme_list[current_theme][type][0] || '#1BC6BC'
+
+                            //      maxColor:Highcharts.getOptions().colors[0]
+                            //  borderColor:'#FFFFFF'
+
+                        }
+                    }
+
+
+                //options.chart.backgroundColor= "#FFFFFF";
+                options.chart.plotBorderWidth = 1;
+                options.plotOptions.series.borderColor = '#FFFFFF';
+                options.plotOptions.series.borderWidth = 1;
+                options.tooltip = tooltip;
+                $.extend(true, options.plotOptions.series, dataLabels);
+                $.extend(true, options, colorAxis);
+                $.extend(true, options.legend, legend);
+            }
+            
+            if(type == "area"){
+            	var area={
+            	 area: {
+            		
+                     pointStart: 1940,
+                     marker: {
+                         enabled: false,
+                         symbol: 'circle',
+                         radius: 2,
+                         states: {
+                             hover: {
+                                 enabled: true
+                             }
+                         }
+                     }
+                 }
+            	
+            	
+            }
+            	var fillColor=  {fillColor: {
+                    linearGradient: [0, 0, 0, 300]
+                }};
+            	
+            	var stops=
+              [
+                    [0, Highcharts.getOptions().colors[0]],
+                    [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]]
+                ;
+            	options.plotOptions.area=area;
+            	options.plotOptions.area.fillColor=fillColor;
+            	options.plotOptions.area.fillColor.stops=stops;
+            	
+            	$.extend(true, options.plotOptions.area);
+            	 
+            }
+            
+            // calling function with the new properties .
+            widget = new HighChartsWrapper(options);
+            //console.log("chart type=" + options.chart.type);
+            widget.properties = properties;
+        }
+        else{
+        	// other families
+        	widget = window[family]({
+                name: name,
+                type: type,
+                id: id,
+                properties: properties
+            });
+        }
+        return widget;
+    };
+};
+/**
+ * 
+ * Factory class to get Filter
+ * 
+ */
+function FilterFactory() {
+    console.log("in Application.js.FilterFactory()");
+    this.getFilter = function(filterID, name, type, containerID, properties) {
+    	//console.log("properties="+JSON.stringify(properties));
+        this.properties=properties;
+    	
+    	//console.log("filterID="+filterID+" name="+name+" type="+type);
+    	var filter=document.getElementById("filter_"+filterID);
+    	var filterOptionsLength=$(filter).children().length;
+    	//console.log("filter name="+$("filter_"+filterID).name);
+    	//console.log("filter name="+$(filter).name);
+    	if(type=="listbox")
+    	{
+    		
+    		$(filter).attr("onChange","m_Controller.app.filterdrilldown("+filterID+")");  
+    		
+    		if(filterOptionsLength==1){
+    			$(filter).attr("onfocus","this.selectedIndex = -1"); //when only one option in select box
+    			return;
+    		}
+    	}
+    
+    };
+};
+
+function triggerFilterPopulate(source_filter_id,name,value,target_filter_id)
+{
+	//alert("source="+source_filter_id+"name="+name+"value="+value+"target="+target_filter_id);
+	//alert("yes");
+	var additionalParams = new Object();
+	additionalParams[name]=value;
+	//alert("additionalParams="+JSON.stringify(additionalParams));
+	m_Controller.populateFilterParams(null,target_filter_id, additionalParams);
+}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>query Builder Demo</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      crossorigin="anonymous"
+    />
+    <!--   <link rel="stylesheet" type="text/css" href="/node_modules/bootstrap-select/dist/css/bootstrap-select.css"> -->
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='dist/css/query-builder.default.css') }} "
+      id="qb-theme"
+    />
+  </head>
+  <body style="overflow:auto;" class="theme_1"  background=" {{ url_for('static', filename='background_image.jpg') }} ">
+
+      <div class="head-top" style="background-color: #20afdd; overflow: hidden; margin-bottom:2%">
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+          <link rel="newest StyleSheet" href="{{ url_for('static', filename='main.css') }}" type="text/css" media="all">
+  
+          <div class="row">
+          <div class="brand-name pull-left col-md-3">
+  
+            <img src="{{ url_for('static', filename='jefferson_brand_logo.png') }} " style="height:50px;padding:5px;float:left">
+            </div>
+            <div id="titleDiv" class="display-4 col" style="font-size: 3.5rem;font-weight: 300;line-height: 1.2;">ENTERPRISE ANALYTICS PORTAL</div>
+            <div class=" col-md-3">
+            <div id="rightImageDiv" class="pull-right wellness">
+              <div id="homePageImageDiv">
+                <a id="homePageLink" href="#">
+                <div id="homeIcon" title="Home"></div>
+                <img id="homePageImage"> 
+                </a>
+                
+              </div>
+            </div>
+            </div>
+          </div>
+            
+          </div>
+  
+
+    <div id="builder"></div>
+
+    <button class="btn btn-primary parse-json">Apply</button>
+
+    <div id="result" class="hide">
+      <h3>Output</h3>
+      <pre></pre>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-2.x-git.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+      integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+      crossorigin="anonymous"
+    ></script>
+    <!--   <script src="/node_modules/bootstrap-select/dist/js/bootstrap-select.js"></script> -->
+    <script src="{{ url_for('static', filename='dist/js/query-builder.standalone.js') }} "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.3.2/bootbox.js" integrity="sha256-/xtAmLBY+m2arbG5tgC75nJ3pC0zGLdo0hw8zEOuVF4=" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='app.js') }} "></script>
+  
+    
+    <p id='result_p'  class="h4"> </p>
+  
+  </body>
+</html>

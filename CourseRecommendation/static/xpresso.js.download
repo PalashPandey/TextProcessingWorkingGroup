@@ -1,0 +1,226 @@
+
+$(document).ready(function () {
+ 
+    $('.tree-toggle').click(function (e) {
+		var $href = $(this).attr('href');
+		if($href === '#' || !$href){
+			e.preventDefault();
+			e.stopPropagation();
+			console.log("In xpresso.js- tree-toggle function!!");
+			$(this).parent().children('form').children('div.tree').toggle(300);
+			
+			if($(this).parent('.has-child').length){
+				$(this).parent('.has-child').toggleClass('open', 300);
+			}
+			else{
+				$(this).parent().children('div.tree').toggle(300);
+			}
+			
+			$(this).parent('div.tree').toggle(300);
+			$('#ui-datepicker-div').addClass('xpresso-dropdown');
+		}
+        
+    });
+    
+    $(document).on('keypress', "form[name='filterForm'] input, form[name='filterForm'] select, form[name='filterForm'] textarea", document,function(e){
+    	
+    	if(e && e.keyCode == 13){
+    		e.preventDefault();
+    		var form = $(this).closest('form')[0];
+    		//$(form).submit();
+    		$('#update').click();
+    	}
+    });
+    
+    $(document).on('click','#update',function(){
+		$('body').click();
+	});
+   /* $('#filterForm').on('submit',function(){
+		$('body').click();
+	});*/
+    
+    setInterval(function(){
+    	if(!window.currentPage){
+    		window.currentPage = m_Controller.app.getCurrentPage();
+    	}
+	},500);
+    /*sessionStorage.setItem("current_theme", "theme_3");*/
+    sessionStorage.setItem("current_theme", "");
+    $('.color-theme > .tree .item').data('selected', sessionStorage.getItem("current_theme"));
+    sessionStorage.setItem('selected-theme', sessionStorage.getItem("current_theme"));
+    
+	if(sessionStorage.getItem("current_theme")){
+		var theme = sessionStorage.getItem("current_theme");
+		var selected_theme = sessionStorage.getItem('selected-theme');
+		
+    	$('body').removeClass(selected_theme).addClass(theme);
+		$('.color-theme > .tree .item').removeClass('selected');
+		$('.color-theme > .tree .item[data-value="'+ theme +'"]').data('selected', theme).addClass('selected');
+		sessionStorage.setItem('selected-theme', theme);
+	}
+	else{
+		sessionStorage.setItem("current_theme", "theme_1");
+	}
+	
+	
+	$(document).on('click', '.color-theme > .tree .item > a', function(e){
+		e.preventDefault();
+	});
+	
+	$(document).on('click', '.color-theme > .tree .item', function(e){
+		var theme = $(this).data('value');
+    	var selected_theme = $(this).data('selected');
+    	$('.color-theme > .tree .item').removeClass('selected');
+    	sessionStorage.setItem("current_theme", theme);
+    	$('body').removeClass(selected_theme).addClass(theme);
+    	
+    	try{
+    		if(document.getElementsByTagName('iframe').length){
+        		var iframe_body = document.getElementsByTagName('iframe')[0].contentWindow.document.getElementsByTagName('body')[0];	            	
+            	$(iframe_body).removeClass(selected_theme).addClass(theme);
+        	}  
+    	}
+    	catch( e ){
+    		console.log("errors occurs:", e);
+    	} 	
+    	
+    	$('.color-theme > .tree .item').data('selected', theme);
+    	sessionStorage.setItem('selected-theme', theme);
+    	$(this).addClass('selected');
+    	if(window.currentPage.widgets.length){
+    		m_Controller.app.refreshPage(m_Controller.app.current_page_id);
+    	}
+	});
+ 
+ 
+ 
+    $(function () {
+        console.log("In xpresso.js- tree-toggle blank function!!");
+        //$('.tree-toggle').parent().children('div.tree').toggle(200);
+    });
+ 
+    $('.row-search-btn').click(function () {
+        console.log("In xpresso.js- row-search-btn click function!!");
+        $(this).parent().children('#rowSearch').toggle(300);
+    });
+ 
+ 
+    $(function () {
+        console.log("In xpresso.js- row-search-btn blank function!!");
+        $('.row-search-btn').parent().children('#rowSearch').toggle(200);
+    });
+});
+ 
+ 
+ 
+ 
+$(document).mouseup(function (e)
+{
+    var container = $(".xpresso-dropdown:not(.row-search-btn)");
+    console.log("container:",container);
+    if (!container.is(e.target) // if the target of the click isn't the container... 
+        && container.has(e.target).length === 0 // ... nor a descendant of the container
+		&& (e.target != $('html').get(0))) // nor the scrollbar
+    {
+        container.hide();
+    }
+ 
+    var searchContainer = $("#rowSearch");
+ 
+    if (!searchContainer.is(e.target) // if the target of the click isn't the container...
+ 
+        && searchContainer.has(e.target).length === 0) // ... nor a descendant of the container
+    {
+        searchContainer.hide();
+    }
+});
+
+$(document).on('click','body',function (e)
+{
+    var container = $("#filters");
+    var date_range_picker = $(".daterangepicker");
+ 	if(!container.is(e.target) && !$(e.target).closest(container).length && !date_range_picker.is(e.target) && !$(e.target).closest(date_range_picker).length){
+		container.hide();
+	}
+   
+});
+ 
+ 
+(function($) {
+      fakewaffle.responsiveTabs(['xs', 'sm']);
+  })(jQuery);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  // bootstrap tab navigation
+ 
+  $('.tab-nav-next-prev .next').click(function(){
+  $('.nav-tabs > .active').next('li').find('a').trigger('click');
+ 
+ 
+ 
+ 
+ 
+  $('.tab-nav-next-prev .prev').addClass('active');
+ 
+ 
+});
+ 
+  $('.tab-nav-next-prev .prev').click(function(){
+  $('.nav-tabs > .active').prev('li').find('a').trigger('click');
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+});

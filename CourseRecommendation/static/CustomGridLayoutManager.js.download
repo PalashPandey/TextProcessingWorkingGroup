@@ -1,0 +1,360 @@
+/**
+ * 
+ * Default Layout Manager - lays out page
+ * 
+ */
+
+function DefaultLayoutManager() {
+	
+	this.layoutPage = function(app) {
+		this.layoutBanner(app);
+		this.layoutPageSelectionSection(app);
+		this.layoutParameterSelectionScreen(app);
+		this.layoutDashboard(app);
+		};
+
+	this.layoutBanner = function(app) {
+		// title
+		var image_url=app.properties.image_url;
+		console.log("image url="+image_url);
+		
+		// right image
+		var leftImageDiv = $(document.createElement("div"));
+		var logoImageDiv = $(document.createElement ("div"));
+		$(logoImageDiv).attr("style", "float:left;padding-left:20px");
+		var homePageLink = $("<a>");
+//		$(homePageLink).attr("href", "../"+app.properties.name+"/");
+		var logoImage = $("<img>");
+		$(logoImage).attr("height", "50px");
+		$(logoImage).attr("src", app.properties.image_url);
+		$(logoImage).attr("title", "Home Page");
+		$(homePageLink).append($(logoImage));
+		$(logoImageDiv).append($(homePageLink));
+		$(leftImageDiv).append($(logoImageDiv));
+		
+		var titleDiv = $("#titleDiv")
+		$(titleDiv).text(app.properties.title);
+		
+		$(homePageLink).attr("href", "../ubaweb/index.jsp?app_name=UBAHomePage");
+		
+		$.get(image_url)
+		.done(function(){
+			console.log("homeImage success");
+			//$("#homeIcon").attr("style","display:none");
+			$("#homePageImage").attr("style","display:block");
+			$("#homePageImage").attr("height", "33px");
+			$("#homePageImage").attr("src", app.properties.image_url);
+			$("#homePageImage").attr("title", "Home");
+			
+		})
+		.fail(function(){
+			console.log("homeImage fail");
+		})
+	};
+	
+	this.layoutPageSelectionSection = function(app) {
+		var page_selector = $(".page_selector");
+		$(page_selector).empty();
+
+		var list = $(document.createElement("ul"));
+		$(list).attr("class", "nav nav-tabs responsive");
+		$(list).attr("role", "tablist");
+		var i;
+		for (i = 1; i <= app.pages.length; i++) {
+			console.log("current_page_id="+app.current_page_id);
+			if (i == app.current_page_id) {
+				// active page
+				var active_item = $(document.createElement("li"));
+				$(active_item).attr("class", "active");
+				$(active_item).attr("role", "presentation");
+				var link = $(document.createElement("a"));
+				$(link).attr("href", "#");
+				$(link).attr("role", "tab");
+				$(link).attr("data-toggle", "tab");
+				$(link).text(app.pages[i - 1].properties.name);
+				$(active_item).append($(link));
+				$(list).append($(active_item));
+				if(app.pages[i-1].properties.floating_menu_icon){
+					$("#floating_menu_icon").show()
+				}else{
+					$("#floating_menu_icon").hide()
+				}
+			} else {
+				// inactive page
+				var inactive_item = $(document.createElement("li"));
+				$(inactive_item).attr("role", "presentation");
+				var link = $("<a>");
+				$(link).attr("href", "#");
+				$(link).attr("onClick","javascript:m_Controller.app.refreshPage(" + i + ")");
+				$(link).attr("role", "tab");
+				$(link).attr("data-toggle", "tab");				
+				$(link).text(app.pages[i - 1].properties.name);
+				$(inactive_item).append(link);
+				$(list).append($(inactive_item));
+			}
+		}
+		$(page_selector).append($(list));
+	}
+
+	this.layoutDashboard = function(app) {
+		
+		var page = app.getCurrentPage();
+		var container = $(".tab-pane");
+		
+		// Clear the KPIStrip widget
+		$("#tiles").empty();
+		
+		var url = page.properties.url;
+		$(container).empty();
+
+		if (url == null){
+			if(page.properties.baner_url){
+				$.get(page.properties.baner_url)
+				.done(function(){
+					$(".page-banner img").attr("src", page.properties.baner_url)
+				})
+				.fail(function(){
+					$(".page-banner img").attr("src", "img/default-banner.jpg")
+				})
+				$(".page-banner").show();
+			}else{
+				$(".page-banner").hide();
+			}
+			var layout = page.properties.layout;
+			var tabContent = this.layoutColumns(layout, app);
+			$(container).append(tabContent);
+		}
+		else{
+			// create iframe with url contents
+			var iframe = $(document.createElement("iframe"));
+			iframe.attr ("src", url);
+			iframe.attr ("id", page.properties.name.replace(/ /g,'')+"_frame");
+			$(iframe).on('load', function(){
+				var selected_theme = sessionStorage.getItem('current_theme') || 'theme_1';
+				this.contentWindow.document.getElementsByTagName('body')[0].className += ' '+selected_theme;
+				console.log("top doc123213::", this.contentWindow.document.getElementsByTagName('body'));
+			});
+			$(container).append ($(iframe));
+		}
+			
+	};
+	
+	this.layoutColumns = function(layout, app){
+		var rowContent = $("<div>").addClass("row");
+		for(var i=0; i<layout.length; i++){
+			var colContent = $("<div>")
+								.addClass("col-sm-"+layout[i]["colspan"])
+								.css("height", (layout[i]["rowspan"]*450)+"px");
+			if("number" == typeof layout[i]["widget"]){
+				var widget = app.getWidget(layout[i]["widget"]);
+				$(colContent)
+					.addClass("widget")
+					.css("padding","15px")
+					.append(this.getWidgetDOM(widget))
+				if('HTMLWidget' == widget.properties.type){
+					$(colContent)
+						.css("height", "auto")
+						.css("padding","0");
+				}
+			}else{
+				$(colContent).append(this.layoutColumns(layout[i]["widget"], app));
+			}
+			$(rowContent)
+				.append(colContent);
+		}
+		return rowContent;
+	}
+	
+	this.getWidgetDOM = function(widget){
+		var visible = widget.properties.visible;
+		var header_panel = widget.properties.header_panel;
+		var body_panel = widget.properties.body_panel;
+		if ((visible == null) || (visible == "true")) {
+			var widgetName = widget.properties.name;
+			var widgetID = widget.id;
+			var panelDiv = $("<div>")
+							.css({"height": "100%",
+								"width": "100%",
+								"box-shadow":"none",
+								"box-sizing": "border-box"});
+			if (body_panel == null || body_panel == "true")
+				$(panelDiv).addClass("panel panel-default content col-sm");
+			if(widget.properties.type!='HTMLWidget'){
+				/*$(panelDiv).css({"box-shadow": "0 0 5px 0 rgba(0,0,0,0.15)",
+					"margin": "15px 0",
+					"border-radius": "8px",
+					"overflow": "hidden",
+					"border": "1px solid #d3d3d3",
+					"background-color": "#fff !important"});*/
+				
+				$(panelDiv).addClass("not-html-widget");
+			}else{
+				$(panelDiv).css({
+					"padding":0,
+					"margin":0,
+					"border":"none"
+				})
+			}
+			
+
+			if ((header_panel == null || header_panel == "true")&& widgetName!=''){
+				var panelHeading = $("<div>")
+										.attr("class", "panel-heading")
+										.css("background-color","white")
+										.css("padding","10px")
+										.text(widgetName);
+				$(panelDiv).append(panelHeading);
+			}
+			
+			var panelBody = $("<div>");
+			if(widgetName!=''){
+				$(panelBody).css({"height": "calc( 100% - 41px )"});
+			}
+			else{
+				$(panelBody).css({"height": "100%"});
+			}
+			if (widget.properties.type == "KPIStrip")
+				$(panelBody).attr("class", "panel-body kpistrip");
+			else
+				{$(panelBody).attr("class", "panel-body widgetContainer");
+				if(widget.properties.type=="Grid")
+					{
+					$(panelBody).attr("style", "width:98%;");
+					}
+					
+				}
+			$(panelBody).attr("id", "report_" + widgetID);
+			$(panelDiv).append($(panelBody));
+			
+			return panelDiv;
+		}
+	}
+
+	this.layoutParameterSelectionScreen = function(app) {
+		var page = app.getCurrentPage();
+		var filters = $("#filters");
+		$(filters).empty();
+		filters.attr("style", "display:none;");
+		
+		var header = $(document.createElement("div"));
+		$(header).attr("class", "title");
+		$(header).text("Filters");
+		$(filters).append($(header));
+
+		var list = $(document.createElement("div"));
+		$(list).attr("class", "holder");
+		$(list).attr("style","max-height:400px;overflow-y:auto;");
+		var i, numfilters = page.filter_params.length;
+		for (i = 0; i < numfilters; i++) {
+			var filter = app.getFilterParam(page.filter_params[i]);
+			var item = $(document.createElement ("div"));
+			$(item).attr("class", "item has-child");
+
+			var divLink = $(document.createElement ("a"));
+			$(divLink).attr("href", "#");
+			$(divLink).attr("onclick", "$(this).parent().children('div.tree').toggle(300);$(this).parent('.has-child').toggleClass('open', 300);");
+			$(divLink).attr("class", "tree-toggle");
+			$(divLink).text(filter.properties.caption);
+			var divSign = $(document.createElement ("i"));
+			$(divSign).attr("class", "fa");
+			$(divLink).prepend ($(divSign));
+			$(item).append($(divLink));
+			
+			var select_panel = $(document.createElement ("div"));
+			$(select_panel).attr ("class", "group tree");
+			$(select_panel).attr ("style", "display:none;");
+			var type = filter.properties.gui_type;
+			if (type == "listbox") {
+				var itemDiv = $(document.createElement ("div"));
+				$(itemDiv).attr("class", "item component");
+				var sel = $(document.createElement ("select"));
+				$(sel).attr("class", "form-control");
+				$(sel).attr("name", filter.properties.name);
+				$(sel).attr("id", "filter_"+filter.id);
+				console.log("filter params="+filter.properties.name)
+				if (filter.properties.multiple != null)
+					$(sel).attr ("multiple", "true");
+				
+				$(itemDiv).append($(sel));
+				
+				$(select_panel).append ($(itemDiv));
+			}
+
+			else if (type == "textbox") {
+				var itemDiv = $("<div>");
+				$(itemDiv).attr("class", "item component");
+				var inp = $(document.createElement("input"));
+				$(inp).attr("type", "text");
+				$(inp).attr("name", filter.properties.name);
+				$(inp).attr("value", filter.properties.default_value);
+				$(itemDiv).append($(inp));
+				$(select_panel).append ($(itemDiv));
+			} 
+			else if (type == "date") {
+				var itemDiv = $("<div>");
+				$(itemDiv).attr("class", "item component");
+				var inp = $("<input/>");
+				$(inp).attr("type", "text");
+				$(inp).attr("readonly", "readonly");
+				$(inp).attr("data-type", type);
+				$(inp).attr("data-single", !filter.properties.date_range);
+				$(inp).attr("name", filter.properties.name);
+				$(inp).attr("value", filter.properties.default_value);
+				$(itemDiv).append($(inp));
+				$(select_panel).append ($(itemDiv));
+				
+				$(inp).daterangepicker({
+					"singleDatePicker": !filter.properties.date_range,
+					"autoApply": true,
+					"ranges": {
+						'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+					    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+					    'This Month': [moment().startOf('month'), moment().endOf('month')],
+					    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+					},
+					"opens": "right",
+					"startDate": filter.properties.default_value ? new Date(filter.properties.default_value) : moment().subtract(6, 'days'),
+					"endDate": moment(),
+					"maxDate": moment()
+				}, function(start, end, label) {
+                                   $(inp).val(filter.properties.default_value);
+				   console.log("New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')");
+				}).change();
+				
+			} 
+			else if (type == "textarea component") {
+				var itemDiv = $("<div>");
+				$(itemDiv).attr("class", "item");
+				var ta = $(document.createElement("textarea"));
+				$(ta).attr("name", filter.properties.name);
+				$(ta).attr("value", filter.properties.default_value);
+				$(itemDiv).append($(ta));
+				$(select_panel).append ($(itemDiv));
+			}
+			else if (type == "checkbox")
+			{
+				$(select_panel).attr("id", "filter_"+filter.id);
+			}
+			$(item).append ($(select_panel));
+			$(list).append($(item));
+		}
+
+		$(filters).append($(list));
+
+		if (numfilters > 0) {
+			var updDiv = $(document.createElement("div"));
+			$(updDiv).attr("class", "item update-btn");
+			var upd = $(document.createElement("a"));
+			$(upd).attr("id","update");
+			$(upd).attr("href", "#");
+			$(upd).attr("onClick","javascript:m_Controller.getResults()");
+			var upd_link = $(document.createElement("i"));
+			$(upd_link).attr("class", "fa");
+			$(upd_link).text("Update Dashboard");
+			$(upd).append($(upd_link));
+			$(updDiv).append($(upd));
+			$(filters).append($(updDiv));
+			console.log("filters added");
+		}				
+	};
+};

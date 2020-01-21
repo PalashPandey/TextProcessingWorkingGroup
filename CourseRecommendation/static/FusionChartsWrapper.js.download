@@ -1,0 +1,64 @@
+function FusionChartsWrapper (params){
+	this.chart = new FusionCharts (params);
+	console.log ("Created new chart");
+	
+	/**
+	 *
+	 * translates data from XPresso to FusionCharts format
+	 *
+	 */
+	this.setJSONData = function (data, name, properties){
+		var aColumnNames = data.columnNames;
+		var rows = data.data;
+		var xaxisname = (properties.xaxisname == null)?"":properties.xaxisname;
+		var yaxisname = (properties.yaxisname == null)?"":properties.yaxisname;
+		var obj = "{\"chart\":{\"caption\":\"" + name + "\", \"xAxisName\":\"" + xaxisname + "\", \"yAxisName\":\"" + yaxisname + "\"}, ";
+		//var obj = "{\"chart\":{}, ";
+		var i, j, cols;
+		if (aColumnNames.length <= 2){
+			obj += "\"data\":[";
+			for (j = 0; j < rows.length; j ++){
+				cols = rows[j];
+				obj += "{\"label\":\"" + cols[0] + "\", \"value\":\"";
+				if ( aColumnNames.length==2)
+					obj += cols[1];
+				else
+					obj += cols[0];
+				obj += "\"}"
+				if (j < rows.length - 1)
+					obj += ", ";
+			}
+			obj += "]}";
+		}
+		else{
+			// 0th column has labels 1-N columns have data series names are column names 1-n
+			obj += "\"categories\":[{\"category\":[";
+			for (i = 0; i < rows.length; i ++){
+				obj += "{\"label\":\"" + rows[i][0] + "\"}";
+				if (i < rows.length - 1)
+					obj += ", ";
+			}
+			obj += "]}], \"dataset\": [{\"dataset\":[";
+			for (i = 1; i < aColumnNames.length; i ++){
+				obj += "{\"seriesname\":\"" + aColumnNames[i] + "\",";
+				obj += "\"data\":[";
+				for (j = 0; j < rows.length; j ++){
+					obj += "{\"value\":" + rows[j][i] + "}";
+					if (j < rows.length - 1)
+						obj += ", ";
+				}
+				obj += "]}";
+				if (i < aColumnNames.length - 1)
+					obj += ", ";
+			}
+			obj += "]}]}";
+		}
+		console.log (obj);
+		this.chart.setJSONData (obj);
+	};
+	
+	this.render =function(containerID){
+		this.chart.render (containerID);
+	}
+
+}

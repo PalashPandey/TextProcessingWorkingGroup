@@ -1,0 +1,106 @@
+<!--Dependencies: Bootstrap for the animation. Ajax to make the requests to keep session alive for more than 15 minutes.-->
+<!-- Fall-Winter Coop 2018-19 EBI. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Carousel Reporting</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+	<link rel="icon" type="image/png" href="favicon.ico"/>
+</head>
+
+<style> 
+
+/* CSS for the header bar with the gradient. */
+.topnav {
+  overflow: hidden;
+  background: #4477aa;
+  background: -moz-linear-gradient(left, #ffffff 0%, #4477aa 100%);
+  background: -webkit-linear-gradient(left, #ffffff 0%, #4477aa 100%);
+  background: -o-linear-gradient(left, #ffffff 0%, #4477aa 100%);
+  background: -ms-linear-gradient(left, #ffffff 0%, #4477aa 100%);
+  background: linear-gradient(to right, #ffffff 0%, #4477aa 100%);
+}
+</style>
+
+
+<body>
+
+<!-- Header bar with jefferson logo. Uncomment if required. -->
+<!-- <div class="topnav">
+<img src="tjuh_logo.png" >
+</div> -->
+
+<div class="container" style="padding: 0px !important; margin: 50px !important; margin-right: 100px !important; ">
+	  
+	<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="10000" style="width: 90vw !important; height: 95vh !important;  margin-left: 2px !important; padding: 0px;">
+	
+		<!-- Indicators (page buttons) -->
+		<!-- <ol class="carousel-indicators">
+			<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+			<li data-target="#myCarousel" data-slide-to="1"></li>
+			<li data-target="#myCarousel" data-slide-to="2"></li>
+		</ol> -->
+
+		<!-- TO ADD ADDITIONAL SLIDES: create another div with item active class (copy existing one and change the src attribute) and add give the iframe an id of seventh or so on.  -->
+		<!-- Then to refresh the page every 15 minutes to keep session alive : Add a setinterval function with the new iframe id. -->
+		<!-- Wrapper for slides -->
+		<div class="carousel-inner" style="width:100%; height: 100%;">
+			<div class="item active" style="width:100%; height: 100%;">
+				<iframe id = 'first' src="https://qlik.jefferson.edu/adfsp/single/?appid=a3a03faa-3c7c-4f01-974e-9e9f7183a663&sheet=d5aa9f6a-8a8a-4397-9948-79d02d4d06af&opt=nointeraction&select=clearall" style="width:100%; height: 100%;" ></iframe>
+			</div>
+
+			<div class="item" style="width:100%; height: 100%;">
+				<iframe id = 'second' src="https://qlik.jefferson.edu/adfsp/single/?appid=a3a03faa-3c7c-4f01-974e-9e9f7183a663&sheet=6036b015-7299-4041-b323-00650978120d&opt=nointeraction&select=clearall" style="width:100%; height: 100%; " ></iframe>
+			</div>
+		
+			<div class="item" style="width:100%; height: 100%;">
+				<iframe  id = 'third' src="https://qlik.jefferson.edu/adfsp/single/?appid=a3a03faa-3c7c-4f01-974e-9e9f7183a663&sheet=1f9b0c04-67cf-4a52-bc27-4498f57c1ad3&opt=nointeraction&select=clearall" style="width:100%; height: 100%;" ></iframe>
+			</div>
+
+			<div class="item" style="width:100%; height: 100%;">
+				<iframe id = 'fourth'  src="https://qlik.jefferson.edu/adfsp/single/?appid=a3a03faa-3c7c-4f01-974e-9e9f7183a663&sheet=d5dfb82f-d6c3-43f2-9164-1e361052471e&opt=nointeraction&select=clearall" style="width:100%; height: 100%;" ></iframe>
+			</div>
+
+			<div class="item" style="width:100%; height: 100%;">
+				<iframe id = 'fifth' src="https://qlik.jefferson.edu/adfsp/single/?appid=a3a03faa-3c7c-4f01-974e-9e9f7183a663&sheet=b0170f43-0fab-4536-9688-a73f31473f5d&opt=nointeraction&select=clearall" style="width:100%; height: 100%;" ></iframe>
+			</div>
+
+			<div class="item" style="width:100%; height: 100%;">
+				<iframe id = 'sixth' src="https://qlik.jefferson.edu/adfsp/extensions/ExecutiveMetrics/index.html" style="width:100%; height: 100%;" ></iframe>
+			</div>
+
+		</div>
+
+		<!-- Left and right controls -->
+		<a class="left carousel-control" href="#myCarousel" data-slide="prev"  style="opacity : 0; "> 
+			<span class="glyphicon glyphicon-chevron-left"></span>
+			<span class="sr-only">Previous</span>
+		</a>
+		<a class="right carousel-control" href="#myCarousel" data-slide="next" style="opacity : 0; ">
+			<span class="glyphicon glyphicon-chevron-right"></span>
+			<span class="sr-only">Next</span>
+		</a>
+
+
+	</div>
+</div>
+
+</body>
+
+<script type="text/javascript">
+	setInterval(refreshIframe2 ,  150000 , 'first');
+
+	function refreshIframe2(id_) {
+			console.log('THIS RAN!!' + id_);
+			var frame = document.getElementById(id_);
+			frame.src = frame.src;
+	}
+
+</script>
+
+</html>

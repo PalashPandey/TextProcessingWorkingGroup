@@ -1,0 +1,1751 @@
+var m_Controller = new Controller();
+var BASE_URL = "../ubaweb/viz/";
+
+/**
+ * 
+ * this is the main controller, responsible for loading the UBA application, 
+ * as well as refreshing the results
+ *  
+ */
+function Controller () {
+	//console.log("in uba_controller.Controller()");
+	var application_name;	
+	// application object
+	this.app = new Application();
+	
+	/**
+	 * 
+	 * sets authorization context
+	 * 
+	 */
+	this.setAuthContext = function (authContext){
+		//console.log("in uba_controller.setAuthContext()");
+		
+		this.app.authContext = authContext;
+		//console.log("authcontext="+authContext);
+	}
+
+	// SERVICE CALLS
+	// I. APPLICATIONS-RELATED SERVICE CALLS
+	
+	// 1. Create/open an application
+	/**
+	 * 
+	 * service call to open or create application
+	 * 
+	 * @param app_name name of application to be created / opened
+	 * 
+	 */
+	this.openOrCreateApp = function(operation, app_name){
+		var url = BASE_URL + "apps/" + app_name;
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.url = url;
+		if (operation == "create")
+			callInfo.type = "POST";
+		else //open
+			callInfo.type = "GET";
+		
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.openOrCreateAppCallBack(data);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+	
+	// 3. Get a list of application names
+	/**
+	 * 
+	 * service call to get list of applications to display in App Manager or on Home Page
+	 * 
+	 * @param app_manager - true if list required for app_manager, false if not
+	 */
+	this.getAppList = function (app_manager){
+		var url = BASE_URL + "apps";
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.url = url;
+		callInfo.type="GET";
+		callInfo.success = function( data, status) {
+			if (status == "success"){
+				$('body').attr("style","overflow:auto");
+				if (app_manager)
+					m_Controller.getAppListCallBackForAppManager(data);
+				else
+					m_Controller.getAppListCallBackForAppHomePage_new(data);
+			}
+				
+		};
+		callInfo.error = function (jqXHR, msg, exc){
+			
+			if (jqXHR.status === 0) {
+	            msg = 'Not connected.\n Verify Network.';
+	        } else if (jqXHR.status == 404) {
+	            msg = 'Requested page not found. [404]';
+	        } else if (jqXHR.status == 500) {
+	            msg = 'Internal Server Error [500].';
+	        } else if (exception === 'parsererror') {
+	            msg = 'Requested JSON parse failed.';
+	        } else if (exception === 'timeout') {
+	            msg = 'Time out error.';
+	        } else if (exception === 'abort') {
+	            msg = 'Ajax request aborted.';
+	        } else {
+	            msg = 'Uncaught Error.\n' + jqXHR.responseText;
+	        }
+			
+			//console.log("Error: ",msg);
+		};
+		
+		m_Controller.makeAJAXCall (callInfo);
+				
+	}
+
+	// 4. Get query results for an application
+	
+	/**
+	 * 
+	 * service call to get results of query using JSON as input
+	 * 
+	 * @param widget_id - ID of widget to be updated (0 for all widgets)
+	 * @param additionalParams JSON object describing additional params to be applied
+	 * 
+	 */
+	this.getResults = function (widget_id, additionalParams){
+		console.log("in uba_controller.getResults(widget_id, additionalParams)");
+		console.log("widget_id"+widget_id);
+		console.log("additionalParams"+additionalParams);
+
+
+		//console.log("in uba_controller.getResults(widget_id, additionalParams)");
+		//console.log("widget_id"+widget_id);
+		console.log("additionalParams"+JSON.stringify(additionalParams));
+		var paramsJSON = this.formParametersJSON (widget_id, additionalParams);
+		console.log("paramsJSON"+paramsJSON);
+		var params = JSON.parse (paramsJSON);
+		var app_name = params.app_name;
+		var url = BASE_URL + "apps/" + app_name + "/results";
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.url = url;
+		callInfo.data = {"params_json":paramsJSON};
+		callInfo.success = function( data, status) {
+			if (status == "success"){
+				console.log("in getResults()");
+				console.log(data);
+				if(additionalParams == undefined){
+					m_Controller.app.refreshResults(data);
+				}
+				else{
+					if (additionalParams["refresh"] != undefined && additionalParams["refresh"]==false){
+						console.log("refresh results");
+						alert(data.results[0].alert);
+					}else if(additionalParams["rawData"] == true){
+						// Fetching raw data.
+						
+						var widgetWrapper = m_Controller.identifyChildIFrame (document.getElementsByTagName("iframe")[0].contentWindow);
+						widgetWrapper.widget.setJSONData(data.results);
+						frameLoaded(document.getElementsByTagName("iframe")[0].contentWindow);						
+					}
+					else{
+						m_Controller.app.refreshResults(data);
+					}
+				}
+			}
+					
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		
+		//added below function for hiding panel 
+		
+		var page = this.app.getCurrentPage();
+		
+		numfilter = page.filter_params.length;
+		
+			callInfo.complete=function()
+			{
+				$('#loading').hide();
+				$('body').attr('style','overflow:auto');
+				if(numfilter < 1)
+				{
+					$(".filters").hide();
+				}
+				else
+				{
+					$(".filters").show();
+				}
+			
+			};
+		m_Controller.makeAJAXCall (callInfo);
+	}
+	
+	// 5. Save an application
+	/**
+	 * 
+	 * service call to save an application
+	 * 
+	 * @param json application json string
+	 * 
+	 */
+	this.saveApp = function (app_name, json){
+		var url = BASE_URL + "apps/" + app_name;
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "PUT";
+		callInfo.url = url;
+		callInfo.data={app_json:json};
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				alert ("Application saved successfully");
+			else
+				console.log("status="+status);
+				//alert ("Error saving application: " + status);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+		
+	}
+
+	// 6. Delete an application
+	/**
+	 * 
+	 * service call to delete an application
+	 * 
+	 */
+	this.deleteApp = function (app_name){
+		var url = BASE_URL + "apps/" + app_name;
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.url = url;
+		callInfo.type = "DELETE";
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.deleteAppCallBack(data);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+	
+	// 7. Upload a file into an application
+	
+	/**
+	 * 
+	 * service call to get results using form data as input
+	 * 
+	 * @param widget_id - ID of widget against which file is to be uploaded
+	 * @param formData FormData object containing data to be submitted
+	 * 
+	 */
+	this.getResultsForForm = function (widget_id, formData){
+
+		console.log("in uba_controller.getResultsForForm(widget_id, formData)");
+		console.log("widget_id"+widget_id);
+		console.log("additionalParams"+formData);
+		var augmentedFormData = this.addParametersToFormData (widget_id, formData);
+		console.log (JSON.stringify(augmentedFormData));
+		var app_name = augmentedFormData.get ("app_name");
+		var url = BASE_URL + "apps/" + app_name + "/getResultsForForm";
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.url = url;
+		callInfo.data = augmentedFormData;
+		console.log ("uploadFile: Result Type is " + callInfo.data.get("result_type"));
+		callInfo.cache = false;
+		callInfo.dataType = "json";
+		callInfo.contentType = false;
+		callInfo.processData = false;
+		callInfo.success = function( data, status) {
+				if (status == "success")
+					{
+					console.log("in getResults()");
+					console.log(data);
+					m_Controller.app.refreshResults(data);
+					}
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		var page = this.app.getCurrentPage();
+		
+		numfilter = page.filter_params.length;
+		
+			callInfo.complete=function()
+			{
+				$('#loading').hide();
+				$('body').attr('style','overflow:auto');
+		    if(numfilter < 1)
+				{
+					
+				$(".filters").hide();
+				
+				}
+				else
+				{
+					$(".filters").show();
+				}
+			
+			};
+		m_Controller.makeAJAXCall (callInfo);
+
+	};
+		
+	// 4. Call to the populateFilterParams service, with application and page IDs as parameters
+	
+	/**
+	 * 
+	 * service call to populate filter params
+	 * 
+	 * @param pageID - ID of page of which filter params are to be populated
+	 * @param additionalParams JSON object describing additional params to be applied
+	 * 
+	 */
+	this.populateFilterParams = function (pageID,filterID,additionalParams){
+
+		//console.log("in uba_controller.populateFilterParams(pageID)");
+		//console.log("pageID"+pageID);
+		//alert("filterID="+filterID);
+
+		//alert("params="+JSON.stringify(additionalParams));
+		//var paramsJSON = this.formParametersJSON (pageID,filterID,additionalParams);
+		//var paramsJSON = this.formParametersJSON (pageID,filterID,additionalParams);
+		var paramsJSON = {"pageID":pageID,"filterID":filterID,"additionalParams":additionalParams};
+		paramsJSON=JSON.stringify(paramsJSON);
+		////console.log("paramsJSON"+paramsJSON);
+		//var params = JSON.parse (paramsJSON);
+		//var app_name = params.app_name;
+		//var app_name = "FinanceDashboard";
+		
+		var url = BASE_URL + "apps/" + this.application_name + "/filters";
+		//console.log("populateFilter URL="+url);
+//		var url = BASE_URL + "apps";
+		var callInfo = new AJAXCallInfo();
+		callInfo.url = url;
+		callInfo.async=false;
+		callInfo.data = {"param_json":paramsJSON};
+		callInfo.beforeSend=null;
+		callInfo.dataType = "json";
+		callInfo.success = function( data, status) {
+				if (status == "success")
+					{
+					//console.log("filterID="+filterID);
+			    	//alert("data="+JSON.stringify(data));
+			    	var dataArrString=JSON.stringify(data);
+					////console.log("data="+(JSON.parse(dataArr)).length);
+			    	
+			    	m_Controller.app.populateFilterParams(filterID,JSON.parse(dataArrString));
+					}
+					
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		
+		var page = this.app.getCurrentPage();
+		
+		numfilter = page.filter_params.length;
+		
+			callInfo.complete=function()
+			{
+				$('#loading').hide();
+				$('body').attr('style','overflow:auto');
+		    if(numfilter < 1)
+				{
+					
+				$(".filters").hide();
+				
+				}
+				else
+				{
+					$(".filters").show();
+				}
+			
+			};
+		m_Controller.makeAJAXCall (callInfo);
+
+
+	}
+
+	// II. ADMIN-related Service Calls (users, roles, access tokens)
+	
+	/**
+	 * 
+	 * service call to add new user
+	 * 
+	 */
+	this.createUser = function (){
+		// get mappings and parse
+		var user_name = document.getElementById ("new_user_name").value;
+		var url = BASE_URL + "admin/users/";
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "PUT";
+		callInfo.url = url;
+		callInfo.data = {user_name:user_name};
+		
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error adding user: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+	
+	// 2. Create a new role
+	/**
+	 * 
+	 * service call to add new role
+	 * 
+	 */
+	this.createRole = function (){
+		// get mappings and parse
+		var role_name = document.getElementById ("new_role_name").value;
+		var url = BASE_URL + "admin/roles";
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "PUT";
+		callInfo.url = url;
+		callInfo.data = {role_name:role_name};
+		
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error adding role: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+
+	// 3. Get Users and roles
+	/**
+	 * 
+	 * service call to get user and role info
+	 * 
+	 * 
+	 * 
+	 */
+	this.getUsersAndRoles = function (){
+		var url = BASE_URL + "admin/users";
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "GET";
+		callInfo.url = url;
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.getUsersAndRolesCallBack(data);
+			else
+				alert ("Error changing password: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+	
+	// 4. Modify user-role mappings
+	/**
+	 * 
+	 * service call to modify user-role mapping
+	 * 
+	 * @param user_name name of user whose mapping to be modified
+	 * 
+	 */
+	this.modifyRole = function (user_name){
+		// get mappings and parse
+		var mapping = document.getElementById ("role_"+ user_name).value;
+		if (mapping.indexOf("uba_user") < 0){
+			alert ("Role uba_user must be assigned to every user");
+			return;
+		}
+		var roles = mapping.split(";");
+		for( var i = 0; i < roles.length; i++ ){
+			roles[i] = roles[i].trim();
+		}
+		var blankRoles = new Array();
+		var i;
+		for (i = 0; i < roles.length; i ++){
+			if (roles[i] == "")
+				blankRoles.push(i);
+		}
+		for (i = 0; i < blankRoles.length; i ++){
+			roles.splice(blankRoles[i]-i,1);
+		}
+		var mapping_json = new Object();
+		mapping_json.uid = user_name;
+		mapping_json.roles = roles;
+		var url = BASE_URL + "admin/users/" + user_name + "/roles";
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "POST";
+		callInfo.url = url;
+		callInfo.data = {user_mapping:JSON.stringify(mapping_json)};
+		
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error modifying user mappings: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+	
+	// 5. Change user password
+	
+	/**
+	 * 
+	 * service call to change user password
+	 * 
+	 * @param json object with old and new passwords
+	 * 
+	 */
+	this.changePassword = function (json){
+		var url = BASE_URL + "admin/users/password";
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "POST";
+		callInfo.url = url;
+		callInfo.data={app_json:json};
+		callInfo.success = function( data, status) {
+			if (status == "success"){
+				if (data.error == undefined)
+					alert ("Password changed successfully");
+				else
+					alert ("Error changing password: " + data.error);
+			}
+			else
+				alert ("Error changing password: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+	
+	// 6. Delete a user
+	/**
+	 * 
+	 * service call to remove user
+	 * 
+	 * @param user_name to be removed
+	 * 
+	 */
+	this.deleteUser = function (user_name){
+		if (user_name == "superuser"){
+			alert ("User 'superuser' cannot be removed");
+			return;
+		}
+		if (!confirm ("Are you sure you want to remove user " + user_name + "?"))
+			return;
+		var url = BASE_URL + "admin/users/" + user_name;
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "DELETE";
+		callInfo.url = url;
+		callInfo.data = {user_name:user_name};
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error removing user: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+
+	// 7. Delete a role
+	/**
+	 * 
+	 * service call to remove role
+	 * 
+	 * @param role_name to be removed
+	 * 
+	 */
+	this.deleteRole = function (role_name){
+		if ((role_name == "admin") || (role_name == "app_manager") || (role_name == "uba_user")){
+			alert ("Roles 'admin', 'app_manager' and 'uba_user' are system roles and cannot be removed");
+			return;
+		}
+		if (!confirm ("Are you sure you want to remove role " + role_name + "?"))
+			return;
+		var url = BASE_URL + "admin/roles/" + role_name;
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "DELETE";
+		callInfo.url = url;
+		callInfo.data = {role_name:role_name};
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error removing role: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+
+	// 8. Create a new access token
+	/**
+	 * 
+	 * service call to add new access token
+	 * 
+	 */
+	this.createAccessToken = function (){
+		// get mappings and parse
+		var client = document.getElementById ("new_client").value;
+		var application = document.getElementById ("new_application").value;
+		var expiryDate = document.getElementById ("new_expiry_date").value;
+		var url = BASE_URL + "admin/tokens";
+		var accessTokenInfo = new Object();
+		accessTokenInfo.client = client;
+		accessTokenInfo.application = application;
+		accessTokenInfo.expiry_date = expiryDate;
+		if(!client || !application || !expiryDate){
+			var message = !client ? 'Client name' : '';
+			message += !application ? ',Application name' : '';
+			message += !expiryDate ? ',Expiry Date' : '';
+			message += " field(s) can not be empty."
+			
+			if(message.indexOf(',') === 0)
+			{
+				message = message.replace(',','');
+			}
+			alert(message);
+			return;
+		}
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "PUT";
+		callInfo.url = url;
+		callInfo.data = {access_token_json:JSON.stringify(accessTokenInfo)};
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error adding role: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+
+	// 9. Get Access token list
+	/**
+	 * 
+	 * service call to get access tokens
+	 * 
+	 * 
+	 * 
+	 */
+	this.getAccessTokens = function (){
+		var url = BASE_URL + "admin/tokens";
+		var callInfo = new AJAXCallInfo();
+		callInfo.type="GET";
+		callInfo.url = url;
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.getAccessTokenInfoCallBack(data);
+			else
+				alert ("Error getting access token info: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		callInfo.complete= function()
+		{
+			$('body').attr('style','overflow:auto');
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+
+	// 10. Modify access token
+	/**
+	 * 
+	 * service call to modify access token
+	 * 
+	 */
+	this.modifyAccessToken = function (tokenJSON, tokenIndex){
+		var accessToken = JSON.parse (tokenJSON);
+		// get mappings and parse
+		var url = BASE_URL + "admin/tokens/" + accessToken.token;
+		// set expiry date
+		accessToken.expiry_date = document.getElementById("expiry_date_" + tokenIndex).value
+		var callInfo = new AJAXCallInfo();
+		callInfo.type="POST";
+		callInfo.url = url;
+		callInfo.data = {access_token_json:JSON.stringify(accessToken)};
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error adding role: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+
+	//11. Delete Access Token
+	/**
+	 * 
+	 * service call to remove access token
+	 * 
+	 */
+	this.deleteAccessToken = function (accessTokenJSON){
+		var accessToken = JSON.parse (accessTokenJSON);
+		if (!confirm ("Are you sure you want to remove client " + accessToken.client + " from application " + accessToken.application + "?"))
+			return;
+		// get mappings and parse
+		var url = BASE_URL + "admin/tokens/" + accessToken.token;
+		
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "delete";
+		callInfo.url = url;
+		callInfo.success = function( data, status) {
+			if (status == "success")
+				m_Controller.refreshPageCallBack(data);
+			else
+				alert ("Error adding role: " + data.error);
+				
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				alert (msg);
+		};
+		m_Controller.makeAJAXCall (callInfo);
+		
+	}
+
+	/**
+	 * 
+	 * loads the application in dashboard
+	 * 
+	 */
+	this.load = function(name,  layoutManager){
+//		debugger;
+		this.application_name=name;
+		//console.log("in uba_controller.load()");
+		if (name=="null"){
+			alert ("You do not have permissions to open this application. Please contact the UBA Administrator");
+			document.location = "http://www.yahoo.com";
+		}
+		var url = BASE_URL + "apps/"+name;
+		var callInfo = new AJAXCallInfo();
+		callInfo.type = "GET";
+		callInfo.url = url;
+		callInfo.success = function( data, status) {
+			//Overwriting success method.
+			
+				if (status == "success"){
+					//console.log("in m_controller.load()");
+					////console.log("data.results"+JSON.stringify(data));
+					m_Controller.app.load (data.results, layoutManager);
+					if(requestedTabInAdmin != null && requestedTabInAdmin && requestedTabInAdmin != "null"){
+						//console.log("requestedTabInAdmin:" + requestedTabInAdmin);
+						/*if(requestedTabInAdmin  "")*/
+						m_Controller.app.refreshPage(requestedTabInAdmin);
+					}
+						
+				}
+					
+		};
+		callInfo.error = function (jqxhr, msg, exc){
+				console.log("############## Hi #################");
+				location = "error.html";
+		};
+		
+		this.makeAJAXCall (callInfo);
+	};
+	
+	/**
+	 * 
+	 * callback function - populates Application drop-downs for open/delete actions in App Manager
+	 * 
+	 */
+	this.getAppListCallBackForAppManager = function(data){
+		// populate app names list
+		var i, numapps = data.results.length;
+		for (i = 0; i < numapps; i ++){ 
+			var option = document.createElement ("option");
+			option.text = data.results[i].name;
+			document.getElementById("apps_list").add (option, null);
+		}
+		for (i = 0; i < numapps; i ++){ 
+			var option = document.createElement ("option");
+			option.text = data.results[i].name;
+			document.getElementById("apps_list_del").add (option, null);
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * callback function - populates Application drop-downs for open/delete actions in App Manager
+	 * 
+	 */
+	this.getAppListCallBackForAppHomePage_new = function(data){
+		// populate app names list
+
+		var tableProperties={
+				"bodyFont":"14.5px verdana,sans-serif",
+				"bFilter":"false",
+				"bLengthChange":"false",
+				"pageLength":5,
+				"type":"AppHomePageGrid",
+				"family":"Abzooba",
+				"colTypes":["link","text"],
+				"colAlignments":["Left","Right"]
+		};
+		////console.log(tableProperties.type);
+		var i, numapps = data.results.length;
+		tableDiv = new AbzoobaWidgets({
+			name : 'Applications',
+			type : 'AppHomePageGrid',
+			id : 'apps_list',
+			properties : tableProperties
+		});
+
+			
+		var rowdata=[];
+		var carouselItem = $("<div>").addClass('carousel-item').attr("href","#s1!");
+		for(i=0;i<data.results.length;i++)
+		{
+			if(data.results[i].name != 'UBAHomePage'){
+				var description="";
+				if(data.results[i].description){
+					description=data.results[i].description;
+				}
+
+				var $p = $("<p>").text(description?description:'')
+					.addClass("application_tooltip");
+				if(description){
+					var tooltip = $("<span>").addClass("tooltiptext").text(description?description:'')
+				}
+				
+				var $img = $("<img>").attr("src",data.results[i].brand_logo_url?data.results[i].brand_logo_url:"images/XPRESSO.png");
+				var $div = $("<div>").append($("<h6>").text(data.results[i].title)).append($p);
+				
+				if(description){
+					$div.append(tooltip);
+				}
+				var application = $("<a>")
+					.addClass("application-tile")
+					.append($img)
+					.append($div);
+				
+				carouselItem.append(application);
+				if((i+1)%6==0){
+					$("#apps_list").append(carouselItem);
+					carouselItem = $('<div>').addClass('carousel-item').attr("href",'#s'+(parseInt((i+1)/6)+1)+'!');
+				}
+									
+				if(data.results[i].redirect_url){
+					$(application).attr("href", "javascript:parent.document.location='" + data.results[i].redirect_url+"'");
+				}else{
+					$(application).attr("href", "javascript:parent.document.location='/ubaweb/index.jsp?app_name=" + data.results[i].name+"'");
+				}
+				if(data.results[i].external_application == 'true'){
+					$(application).attr("onclick","window.open('"+data.results[i].redirect_url+"')");
+					$(application).attr("href", "#");
+				}
+			}
+		}
+		if((data.results.length%6)!=0){
+			$("#apps_list").append(carouselItem);
+		}
+		$('.carousel').carousel({
+		    indicators: true,
+		    fullWidth: true,
+		    dist: -50
+		  });
+		// move next carousel
+	   $('.moveNextCarousel').click(function(e){
+	      e.preventDefault();
+	      e.stopPropagation();
+	      $('.carousel').carousel('next');
+	   });
+
+	   // move prev carousel
+	   $('.movePrevCarousel').click(function(e){
+	      e.preventDefault();
+	      e.stopPropagation();
+	      $('.carousel').carousel('prev');
+	   });
+		//var $dummy_enterprise_app = '<a class="application-tile" style="background:#20afdd !important;" href="javascript:parent.document.location=\'/UBAWebReporting\'"><div><h6>Your EA Representative </h6><p class="application_tooltip">Brian Glynn  <br>Brian.Glynn@Jefferson.edu</p><span class="tooltiptext">Brian.Glynn@Jefferson.edu</span></div><div class="i_elem_cls"><i class="fa fa-envelope" style="font-size:xx-large"></i><i class="fa fa-skype" style="font-size:xx-large;margin-left: 10px;"></i></div></a>';
+		//$('#apps_list').append($($dummy_enterprise_app));
+
+		
+	}
+
+	this.getAppListCallBackForAppHomePage = function(data){
+		// populate app names list
+		var i, numapps = data.results.length;
+		var tableDiv = $("#apps_list");
+		var headerDiv = $(document.createElement("div"));					
+		$(headerDiv).attr("style", "rTableRow");
+		var div1 = $(document.createElement("div"));
+		$(div1).attr("class", "rTableHead");
+		$(div1).text("Name");
+		$(headerDiv).append($(div1));
+		var div2 = $(document.createElement("div"));
+		$(div2).attr("class", "rTableHead");
+		$(div2).text("Title");
+		$(headerDiv).append($(div2));
+		$(tableDiv).append($(headerDiv));
+
+		for (i = 0; i < numapps; i ++){
+			var row = $(document.createElement ("div"));
+			$(row).attr("class", "rTableRow");
+			var col1 = $(document.createElement ("div"));
+			$(col1).attr("class", "rTableCell");
+			var link = $(document.createElement ("a"));
+			$(link).attr("href", "javascript:parent.document.location='/ubaweb/index.jsp?app_name=" + data.results[i].name+"'");
+			$(link).html (data.results[i].name);
+			$(col1).append($(link));
+			$(row).append($(col1));
+			
+			var col2 = $(document.createElement ("div"));
+			$(col2).attr("class", "rTableCell");
+			$(col2).text(data.results[i].title);
+			$(row).append($(col2));
+
+			$(tableDiv).append($(row));
+		}
+		
+			}
+
+	
+	/**
+	 * 
+	 * callback function - populates application JSON tree in App Manager after service call to open/create
+	 * 
+	 */
+	this.openOrCreateAppCallBack = function (data){
+		document.forms["jsoninput"].elements["jvalue"].value = JSON.stringify(data);
+		JSONeditor.treeBuilder.JSONbuild ('tree', data);
+	}
+	
+	/**
+	 * 
+	 * callback function after app deletion - refreshes page
+	 * 
+	 */
+	this.deleteAppCallBack = function(data){
+		if (data.error != undefined)
+			alert (data.error);
+		else
+			alert (data.message);
+		location.reload();
+			
+	}
+	/**
+	*
+	* Function to Sort array of objects by string property value
+	*
+	*/
+	this.dynamicSort = function(property) {
+		var sortOrder = 1;
+		if(property[0] === "-") {
+			sortOrder = -1;
+			property = property.substr(1);
+		}
+		return function (a,b) {
+			var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+			return result * sortOrder;
+		};
+	}
+	/**
+	 * 
+	 * callback function for getting users and roles
+	 * 
+	 */
+	this.getUsersAndRolesCallBack = function(data){
+		// populate user names list
+		//console.log("data:: ",data);
+		var users = data.results.users;
+		var roles = data.results.roles;
+		
+		var i, numusers = users.length;
+		/*var tableDiv = $("#users_list");
+		var headerDiv = $(document.createElement("div"));					
+		$(headerDiv).attr("style", "rTableRow asd");
+		var div1 = $(document.createElement("div"));
+		$(div1).attr("class", "rTableHead qwe");
+		$(div1).text("User Name");
+		$(headerDiv).append($(div1));
+		var div2 = $(document.createElement("div"));
+		$(div2).attr("class", "rTableHead qaz");
+		$(div2).text("Remove");
+		$(headerDiv).append($(div2));
+		$(tableDiv).append($(headerDiv));
+
+		for (i = 0; i < numusers; i ++){
+			var row = $(document.createElement ("div"));
+			$(row).attr("class", "rTableRow");
+			var col1 = $(document.createElement ("div"));
+			$(col1).attr("class", "rTableCell");
+			$(col1).text (users[i].user_name);
+			$(row).append($(col1));
+			
+			var col2 = $(document.createElement ("div"));
+			$(col2).attr("class", "rTableCell");
+			var link = $(document.createElement("a"));
+			$(link).attr("href", "javascript:m_Controller.deleteUser('" + users[i].user_name + "')");
+			$(link).html("Remove");
+			$(col2).append($(link));
+			$(row).append($(col2));
+
+			$(tableDiv).append($(row));
+		}*/
+		// populate role names list
+		
+		var actionElms = "<div class='pull-right h-actions'>" +
+			"<span class='pointer sorting asc'><span class='glyphicon glyphicon-sort' aria-hidden='true'></span></span>" +
+			"<span class='pointer add-btn' title='Add Role'><i class='fa fa-plus' aria-hidden='true'></i></span>" +
+		  "</div>";
+		var numroles = roles.length;
+		tableRolesList = $("#roles_list");
+		headerDiv = $(document.createElement("div"));					
+		$(headerDiv).attr("class", "row t-head");
+		$(headerDiv).append($('<div style="width:45px;" class="pull-left col-xs-1"/>'));
+		div1 = $(document.createElement("div"));
+		$(div1).attr("class", "title pull-left");
+		$(div1).text("Role Name");
+		$(headerDiv).append($(div1));
+		div2 = $(document.createElement("div"));
+		$(div2).attr("class", "pull-right h-actions col-xs-6 text-right");
+		
+		$(div2).html(actionElms);
+		$(headerDiv).append($(div2));
+		$(tableRolesList).append($(headerDiv));
+		
+		var addRoleRow = "<div id='addRoleRow' class='row-add-user new-row-add'>" +
+						"<div class='holder'>" +
+							"<label>Add Role</label>" +
+							"<input type='text' class='' placeholder='Type Role Name' name='new_role_name' id='new_role_name'>" +
+							"<span class='delete pointer'><i class='fa fa-times' aria-hidden='true'></i></span>" +
+							"<button class='btn btn-primary save-role'>Save</button>" +
+						"</div>"+
+					"</div>";
+		
+		
+		$(tableRolesList).append($(addRoleRow));
+		//console.log("button::", $('button', $(tableRolesList)), "===========", $('button'));
+		$('.save-role', $(tableRolesList)).attr("onclick", "javascript:m_Controller.createRole()");
+		function rolesSorting(order){
+			$('#addRoleRow').nextAll().remove();
+			roles = data.results.roles
+			if(order === 'asc'){
+				roles = data.results.roles.sort();
+			}
+			else if(order === 'dsc')
+			{
+				roles = data.results.roles.sort().reverse();
+			}
+
+			for (i = 0; i < numroles; i ++){
+				var row = $(document.createElement ("div"));
+				$(row).attr("class", "row");
+				var col0 = $("<div class='no pull-left col-md-1 col-sm-1 col-xs-1'></div>");
+				$(row).append($(col0));
+				var col1 = $(document.createElement ("div"));
+				$(col1).attr("class", "name pull-left col-md-8 col-sm-8 col-xs-8");
+				$(col1).attr("data-type", "text");
+				$(col1).text (roles[i]);
+				$(row).append($(col1));
+				
+				var col2 = $(document.createElement ("div"));
+				$(col2).attr("class", "actions");
+				
+				$(col2).html('<span class="pointer delete"><a><i class="fa fa-times" aria-hidden="true"></i></a></span>')
+				$('.delete', col2).attr("onClick", "javascript:m_Controller.deleteRole('" + roles[i] + "')");
+				$(row).append($(col2));
+				$(tableRolesList).append($(row));
+			}
+		}
+		rolesSorting('asc');
+		
+		$(document).on('click','#roles_list .sorting', function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			var isAsc = $(this).hasClass('asc');
+			var isDsc = $(this).hasClass('dsc');
+			
+			var order = isAsc ? 'dsc' : (isDsc ? 'asc' : '');
+			rolesSorting(order);
+			
+			isAsc && $(this).removeClass('asc').addClass('dsc');
+			isDsc && $(this).removeClass('dsc').addClass('asc');
+		});
+
+		// populate user-role mappings list
+		var actionElms_1 = "<div class='h-actions'>" +
+					"<span class='pointer sorting asc'><span class='glyphicon glyphicon-sort' aria-hidden='true'></span></span>" +
+					/*"<span class='pointer row-search-btn'><i class='fa fa-search' aria-hidden='true'></i></span>" +
+                        "<div class='search rowSearch'>" +
+                            "<form name=''><input type='' name='' placeholder='Search applications'> <button type='submit'><i class='fa fa-search' aria-hidden='true'></i></button></form>" +
+                        "</div>"+*/
+					"<span class='pointer add-btn' title='Add User'><i class='fa fa-plus' aria-hidden='true'></i></span>" +
+				  "</div>";
+		var tableUserRoleList = $("#users_roles_list");
+		headerDiv = $(document.createElement("div"));					
+		$(headerDiv).attr("class", "row t-head");
+		$(headerDiv).append($('<div style="width:45px;" class="pull-left col-xs-1"/>'));
+		div1 = $(document.createElement("div"));
+		$(div1).attr("class", "title pull-left col-xs-4 email-head");
+		$(div1).text("User Name");
+		$(headerDiv).append($(div1));
+		div2 = $(document.createElement("div"));
+		$(div2).attr("class", "title pull-left col-xs-5");
+		$(div2).text("Role");
+		$(headerDiv).append($(div2));
+
+		div3 = $(document.createElement("div"));
+		$(div3).attr("class", "pull-right h-actions text-right");
+		$(headerDiv).append($(div3));
+		$(div3).html(actionElms_1);
+		// $(div3).text("Action");
+		$(tableUserRoleList).append($(headerDiv));
+		var addUserRoleRow = "<div id='addUserRoleRow' class='row-add-user new-row-add'>" +
+					"<div class='holder'>" +
+						"<label>Add User</label>" +
+						"<input type='text' class='' placeholder='Type User Name' name='new_user_name' id='new_user_name'>" +
+						"<span class='delete pointer'><i class='fa fa-times' aria-hidden='true'></i></span>" +
+						"<button class='btn btn-primary save-user'>Save</button>" +
+					"</div>"+
+				"</div>";
+		
+		
+		$(tableUserRoleList).append($(addUserRoleRow));
+		$('.save-user', $(tableUserRoleList)).attr("onclick", "javascript:m_Controller.createUser()");
+		function userRolesRender(order){
+			$('#addUserRoleRow').nextAll().remove();
+			
+			users = data.results.users
+			if(order === 'asc'){
+				users = data.results.users.sort(m_Controller.dynamicSort("user_name"));
+			}
+			else if(order === 'dsc')
+			{
+				users = data.results.users.sort(m_Controller.dynamicSort("-user_name"));
+			}
+			
+			for (i = 0; i < numusers; i ++){
+				var row = $(document.createElement ("div"));
+				$(row).attr("class", "row");
+				var col0 = $("<div class='no pull-left col-md-1 col-sm-1 col-xs-1'></div>");
+				$(row).append($(col0));
+				var col1 = $(document.createElement ("div"));
+				$(col1).attr("class", "email pull-left col-xs-4");
+				$(col1).attr("data-type", "email");
+				$(col1).text (users[i].user_name);
+				$(col1).prepend($('<i class="fa fa-envelope" aria-hidden="true"></i>'));
+				$(row).append($(col1));
+				
+				var roles = users[i].role_names;
+				var concat_roles = "";
+				var j;
+				for (j = 0; j < roles.length; j ++)
+					concat_roles += roles[j] + ";  ";
+				var col2 = $(document.createElement ("div"));
+				$(col2).attr("class", "pull-left col-xs-4");
+				$(col2).attr("data-type", "multi-select");
+				$(col2).attr("data-id", "role_" + users[i].user_name);
+				var inp = $(document.createElement("INPUT"));
+				$(inp).attr("type", "text");
+				$(inp).attr("value", concat_roles);
+				$(inp).attr("id", "role_" + users[i].user_name);
+				
+				$(col2).append(inp);
+				$(row).append($(col2));
+				
+				var col3 = $(document.createElement ("div"));
+				$(col3).attr("class", "actions");
+				var link = $(document.createElement("a"));
+				
+				$(col3).html('<span class="pointer edit" title="Modify User Roles"><a><i class="fa fa-edit" aria-hidden="true"></i></a></span><span class="pointer delete" title="Remove User"><a ><i class="fa fa-times" aria-hidden="true"></i></a></span>')
+				
+				$('.delete', col3).attr("onClick", "javascript:m_Controller.deleteUser('" + users[i].user_name + "')");
+				$('.edit', col3).attr("onClick", "javascript:m_Controller.modifyRole ('" + users[i].user_name + "')");
+				$(row).append($(col3));
+
+				$(tableUserRoleList).append($(row));
+			}
+		}
+		
+		userRolesRender('asc');
+		
+		$(document).on('click','#users_roles_list .sorting', function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			var isAsc = $(this).hasClass('asc');
+			var isDsc = $(this).hasClass('dsc');
+			
+			var order = isAsc ? 'dsc' : (isDsc ? 'asc' : '');
+			userRolesRender(order);
+			
+			isAsc && $(this).removeClass('asc').addClass('dsc');
+			isDsc && $(this).removeClass('dsc').addClass('asc');
+		});
+	}
+
+	/**
+	 * 
+	 * callback function for getting access tokens
+	 * 
+	 */
+	this.getAccessTokenInfoCallBack = function(data){
+		// populate user names list
+		//console.log("data:: ",data);
+		var clients = data.results.clients;
+		var apps = data.results.apps;
+		var i, numclients = clients.length;
+		// populate access tokens list
+		var actionElms_1 = "<div class='h-actions'>" +
+					"<span class='pointer sorting asc'><span class='glyphicon glyphicon-sort' aria-hidden='true'></span></span>" +
+					"<span class='pointer add-btn' title='Add Client'><i class='fa fa-plus' aria-hidden='true'></i></span>" +
+				  "</div>";
+		var tableClientList = $("#client_list");
+		headerDiv = $(document.createElement("div"));					
+		$(headerDiv).attr("class", "row t-head");
+		$(headerDiv).append($('<div style="width:45px;" class="pull-left col-xs-1"/>'));
+		
+		div1 = $(document.createElement("div"));
+		$(div1).attr("class", "title pull-left col-xs-2");
+		$(div1).text("Client");
+		$(headerDiv).append($(div1));
+		
+		div2 = $(document.createElement("div"));
+		$(div2).attr("class", "title pull-left col-xs-2");
+		$(div2).text("Application");
+		$(headerDiv).append($(div2));
+
+		div3 = $(document.createElement("div"));
+		$(div3).attr("class", "title pull-left col-xs-2");
+		$(div3).text("Expiry Date");
+		$(headerDiv).append($(div3));
+		
+		div4 = $(document.createElement("div"));
+		$(div4).attr("class", "title pull-left col-xs-2");
+		$(div4).text("Access Token");
+		$(headerDiv).append($(div4));
+
+		div5 = $(document.createElement("div"));
+		$(div5).attr("class", "pull-right h-actions text-right");
+		$(headerDiv).append($(div5));
+		$(div5).html(actionElms_1);
+
+		$(tableClientList).append($(headerDiv));
+		var options = "";
+		for (i = 0; i < apps.length; i ++)
+			options += "<option value=\"" + apps[i].name + "\">" + apps[i].name + "</option>";
+		var addClientRow = "<div id='addClientRow' class='row-add-user new-row-add'>" +
+					"<div class='holder container'>" +
+						"<div class='col-xs-2'><label>Add Client</label></div>" +
+						"<div class='col-xs-3'><input type='text' class='' placeholder='Type Client Name' name='new_client' id='new_client'></div>" +
+						"<div class='col-xs-2'><Select class='pull-left' name='new_application' id='new_application'>" + options + "</select></div>" +
+						"<div class='col-xs-2'><input type='text' class='' placeholder='Expiry Date' name='new_expiry_date' id='new_expiry_date' style='width: 160px; max-width: 160px;' readonly></div>" +
+						"<div class='col-xs-2'><button class='btn btn-primary save-user'>Save</button></div>" +
+						"<div class='col-xs-1'><span class='delete pointer'><i class='fa fa-times' aria-hidden='true'></i></span></div>" +
+					"</div>"+
+				"</div>";
+		
+		
+		$(tableClientList).append($(addClientRow));
+		$("#new_expiry_date").datepicker({
+			showOtherMonths: true,
+			selectOtherMonths: true,
+			dateFormat: 'yy-mm-dd',
+			minDate: 0
+		});
+		$('.save-user', $(tableClientList)).attr("onclick", "javascript:m_Controller.createAccessToken()");
+		function clientsRender(order){
+			$('#addClientRow').nextAll().remove();
+			
+			clients = data.results.clients;
+			if(order === 'asc'){
+				clients = data.results.clients.sort(m_Controller.dynamicSort("client"));
+			}
+			else if(order === 'dsc')
+
+			{
+				clients = data.results.clients.sort(m_Controller.dynamicSort("-client"));
+			}
+			
+			for (i = 0; i < numclients; i ++){
+				var row = $(document.createElement ("div"));
+				$(row).attr("class", "row");
+				var col0 = $("<div class='no pull-left col-md-1 col-sm-1 col-xs-1'></div>");
+				$(row).append($(col0));
+
+				var col1 = $(document.createElement ("div"));
+				$(col1).attr("class", "pull-left col-xs-2");
+				$(col1).text (clients[i].client);
+				//$(col1).prepend($('<i class="fa fa-envelope" aria-hidden="true"></i>'));
+				$(row).append($(col1));
+				
+				var col2 = $(document.createElement ("div"));
+				$(col2).attr("class", "pull-left col-xs-2");
+				$(col2).text (clients[i].application);
+				//$(col2).prepend($('<i class="fa fa-envelope" aria-hidden="true"></i>'));
+				$(row).append($(col2));
+
+				var col3 = $(document.createElement ("div"));
+				$(col3).attr("class", "pull-left col-xs-2");
+				var inp = $(document.createElement("INPUT"));
+				$(inp).attr("type", "text");
+				$(inp).attr("value", clients[i].expiry_date);
+				$(inp).attr("title", clients[i].expiry_date);
+				$(inp).attr("id", "expiry_date_" + i);
+				$(inp).attr("readonly", "readonly");
+				$(inp).css({"max-width": "100%",width : '160px'});
+				$(inp).datepicker({
+					showOtherMonths: true,
+					selectOtherMonths: true,
+					dateFormat: 'yy-mm-dd',
+					minDate: 0
+				});
+				$(col3).append(inp);
+				$(row).append($(col3));
+				
+				var col4 = $(document.createElement ("div"));
+				$(col4).attr("class", "pull-left col-xs-2");
+				$(col4).text (clients[i].token);
+				//$(col4).prepend($('<i class="fa fa-envelope" aria-hidden="true"></i>'));
+				$(row).append($(col4));
+
+				var col5 = $(document.createElement ("div"));
+				$(col5).attr("class", "actions");
+				var link = $(document.createElement("a"));
+				
+				$(col5).html('<span class="pointer edit" title="Modify Client"><a><i class="fa fa-edit" aria-hidden="true"></i></a></span><span class="pointer delete" title="Remove Client"><a ><i class="fa fa-times" aria-hidden="true"></i></a></span>')
+				
+				$('.delete', col5).attr("onClick", "javascript:m_Controller.deleteAccessToken('" + JSON.stringify(clients[i])+ "')");
+				$('.edit', col5).attr("onClick", "javascript:m_Controller.modifyAccessToken ('" + JSON.stringify (clients[i]) + "', " + i + ")");
+				$(row).append($(col5));
+
+				$(tableClientList).append($(row));
+			}
+		}
+		
+		clientsRender('asc');
+		
+		$(document).on('click','#client_list .sorting', function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			var isAsc = $(this).hasClass('asc');
+			var isDsc = $(this).hasClass('dsc');
+			
+			var order = isAsc ? 'dsc' : (isDsc ? 'asc' : '');
+			clientsRender(order);
+			
+			isAsc && $(this).removeClass('asc').addClass('dsc');
+			isDsc && $(this).removeClass('dsc').addClass('asc');
+		});
+	}
+	/**
+	 * 
+	 * callback function to refresh page
+	 * 
+	 */
+	this.refreshPageCallBack = function(data){
+		if (data.error != undefined)
+			alert (data.error);
+		else
+			alert (data.message);
+		location.reload();
+			
+	}
+
+	this.getExcelData = function(){
+		var additionalParams = {"fmt":"excel", "result_type":"detailed"};
+		var paramsJSON = this.formParametersJSON (0, additionalParams);
+		var form = document.forms["filterForm"];
+		form.elements["params_json"].value = paramsJSON;
+		form.submit();
+	}
+	
+	/*this.formParametersJSON = function (widget_id, additionalParams){
+		//console.log("In formParametersJSON");
+		//console.log("WidgetID="+widget_id);
+		//console.log("additionalParams="+additionalParams);
+		var url = BASE_URL + "apps/results";
+		var form = document.forms["filterForm"];
+		var i;
+		var elements = form.elements;
+		var params = new Object();
+		for (i = 0; i < elements.length; i ++){
+			if ((elements[i].value != "") && (elements[i].name !="Submit")){
+				params [elements[i].name] =  elements[i].value;
+			}
+		}
+		// add widget ID if specified
+		if (widget_id != null)
+			params["widget_id"] = widget_id;
+		else
+			params["widget_id"] = 0;
+		
+		// add page ID
+		params["page_id"] = new String (this.app.current_page_id);
+		
+		// merge additional parameters into params object
+		if (additionalParams != null){
+			//console.log("additionalParams != null");
+			//params.value = additionalParams.value;
+			for (additionalAttribute in additionalParams)
+				params[additionalAttribute] = additionalParams[additionalAttribute];
+			
+		}
+		var paramsJSON = JSON.stringify (params);
+		return paramsJSON;
+	}*/
+	this.formParametersJSON = function (widget_id, additionalParams){
+		//console.log("In formParametersJSON");
+		//console.log("WidgetID="+widget_id);
+		//console.log("additionalParams="+additionalParams);
+		var url = BASE_URL + "apps/results";
+		var form = document.forms["filterForm"];
+		var i;
+		var elements = form.elements;
+		var params = new Object();
+		// KK - adding uid as an essential parameter
+		params.uid = m_Controller.app.authContext.uid;
+		for (i = 0; i < elements.length; i ++){
+			if ((elements[i].value != "") && (elements[i].name !="Submit")){
+				//alert(elements[i].type);
+				if(elements[i].dataset.type === 'date' && elements[i].dataset.single === 'false'){
+					var date_field_val = elements[i].value.split(" - ");
+					
+					params ["from_"+elements[i].name] =  date_field_val[0];
+					params ["to_"+elements[i].name] =  date_field_val[1];
+				}
+				else if(elements[i].type === 'checkbox')
+					{
+					if(params [elements[i].name]===undefined && elements[i].checked===true)
+						params [elements[i].name] =  elements[i].value;
+					else if(elements[i].checked===true)
+						params [elements[i].name] += ","+ elements[i].value;
+					
+					}
+				else{
+					params [elements[i].name] =  elements[i].value;
+				}
+				
+			}
+		}
+		// add widget ID if specified
+		if (widget_id != null)
+			params["widget_id"] = widget_id;
+		else
+			params["widget_id"] = 0;
+		
+		// add page ID
+		params["page_id"] = new String (this.app.current_page_id);
+		
+		// merge additional parameters into params object
+		if (additionalParams != null){
+			//console.log("additionalParams != null");
+			//params.value = additionalParams.value;
+			for (additionalAttribute in additionalParams){
+				console.log ("Addition attribute: " + additionalAttribute);
+				console.log ("Value: " + additionalParams[additionalAttribute]);
+				params[additionalAttribute] = additionalParams[additionalAttribute];
+			}
+			
+		}
+		var paramsJSON = JSON.stringify (params);
+		return paramsJSON;
+	}
+
+	this.addParametersToFormData = function (widget_id, formData){
+		console.log("In addParametersToFormData");
+		console.log("WidgetID="+widget_id);
+		console.log("formData="+formData);
+		var form = document.forms["filterForm"];
+		var i;
+		var elements = form.elements;
+		var augmentedFormData = new FormData();
+		// KK - adding uid as an essential parameter
+		augmentedFormData.set ("uid", m_Controller.app.authContext.uid);
+		for (i = 0; i < elements.length; i ++){
+			if ((elements[i].value != "") && (elements[i].name !="Submit")){
+				augmentedFormData.set(elements[i].name, elements[i].value);
+			}
+		}
+		// add widget ID if specified
+		if (widget_id != null)
+			augmentedFormData.set ("widget_id", widget_id);
+		else
+			augmentedFormData.set ("widget_id", 0);
+		
+		// add page ID
+		augmentedFormData.set ("page_id", new String (this.app.current_page_id));
+		
+		// merge additional parameters into params object
+		if (formData != null){
+			console.log("formData != null");
+			// copy parameters from one form to the other
+			// values in this form will overwrite older data, 
+			// specifically "result_type" (whose default value is "basic")
+			var iterator = formData.keys();
+			var key = iterator.next();
+			while (!key.done){
+				console.log (key.value);
+				var value = formData.get(key.value);
+				console.log (value);
+				augmentedFormData.set (key.value, value);
+				key = iterator.next();
+			}
+		}
+		return augmentedFormData;
+	}
+	
+	/**
+	 * 
+	 * generic AJAX call
+	 * 
+	 */
+	this.makeAJAXCall = function (callInfo){
+		if ((callInfo.data == null) || (callInfo.data == "{}"))
+			callInfo.data = {"a":"b"};
+		console.log ("AJAX call with: " + callInfo.data);
+		console.log (typeof callInfo.data);
+		if (callInfo.data.get != undefined){
+			console.log ("File: " + callInfo.data.get("file"));
+			console.log("Result Type: " + callInfo.data.get("result_type"));
+			console.log ("UID: " + callInfo.data.get("uid"));
+			console.log ("Widget ID: " + callInfo.data.get("widget_id"));
+			console.log ("Page ID: " + callInfo.data.get("page_id"));
+			console.log ("Call Info: " + JSON.stringify(callInfo));
+	}
+		$.ajax({
+			  type: callInfo.type,
+			  url: callInfo.url,
+			  async:callInfo.async,
+			  dataType: callInfo.dataType,
+			  cache: false,
+			  data:callInfo.data,
+			  contentType: callInfo.contentType,
+			  processData: callInfo.processData,
+
+			  beforeSend: callInfo.beforeSend,
+			  complete:callInfo.complete
+			}).success(callInfo.success)					
+			.error (callInfo.error)
+		
+		};
+
+		/**
+		 * 
+		 * identifies a child Iframe from its URL (useful for identifying the child IFrame
+		 * created for an HTMLWidget
+		 * 
+		 * @param child child window
+		 * 
+		 */
+		this.identifyChildIFrame = function (child){
+			console.log ('trying to identify child ' + child);
+			var aComponents = child.document.URL.split('/');
+			var childURL = aComponents[aComponents.length - 1].split('?')[0];
+			console.log (childURL);
+			var widgetWrappers = this.app.getCurrentPage().widgetWrappers;
+			var i, numberOfWrappers = widgetWrappers.length;
+			for (i = 0; i < numberOfWrappers; i ++){
+				if ((widgetWrappers[i].type == "HTMLWidget") && (widgetWrappers[i].properties.src == childURL))
+					return widgetWrappers[i];
+			}
+			return null;
+		}
+	
+		this.logOut = function(){
+			console.log('trying to logout');
+			// call logout
+			var url = BASE_URL + "admin/logout";
+			
+			var callInfo = new AJAXCallInfo();
+			callInfo.type = "get";
+			callInfo.url = url;
+			callInfo.success = function( data, status) {
+		         location.reload();
+			};
+			callInfo.error = function (jqxhr, msg, exc){
+					location.reload();
+			};
+			m_Controller.makeAJAXCall (callInfo);
+		}
+
+}
+
+
+/**
+ * 
+ * AJAX Call Information object
+ * 
+ */
+function AJAXCallInfo (){
+	  this.type = "POST";
+	  this.url ="";
+	  this.dataType = "json";
+	  this.cache = false;
+	  this.data = "{}";
+	  this.async=true;
+	  this.beforeSend = function() {
+		  $('body').attr('style','overflow:hidden');
+			$('#loading').show();
+	  };
+	  this.success = function ( data, status) {
+		  //console.log (status);
+		  //console.log (JSON.stringify(data));
+			
+	  };
+	  this.error = function (jqxhr, msg, exc){
+		alert (msg);
+	  };
+}
+
+
+/**
+ *
+ * this function is called by the HTML page of an HTMLWidget when it is loaded
+ *
+ * @param child child window
+ * 
+ */
+function frameLoaded (child){
+	console.log ('in frameLoaded: child = ' + child);
+	// get the child window's url, and compare with URLs of all HTMLWidgets
+	// to identify the specific child
+	var widgetWrapper = m_Controller.identifyChildIFrame (child);
+	console.log (widgetWrapper)
+	if (widgetWrapper != null){
+		// if widget is child of a CompoundWidget, identify parent
+		if (widgetWrapper.parent != null)
+			widgetWrapperParent = widgetWrapper.parent;
+		else 
+			widgetWrapperParent = widgetWrapper;
+		console.log(widgetWrapperParent);
+		var childWindow = document.getElementById("iframe_report_" + widgetWrapperParent.id).contentWindow;
+		var render = widgetWrapper.properties.render;
+		childWindow[render](widgetWrapper);
+	}
+}
+
+/**
+*
+* this function is called by the HTML page of an HTMLWidget to refresh results
+*
+* @param child child window
+* 
+*/
+
+function getResultsForJSON (child, params){
+	// get the child window's url, and compare with URLs of all HTMLWidgets
+	// to identify the specific child
+	var widgetWrapper = m_Controller.identifyChildIFrame (child);
+	// refresh the page
+	m_Controller.getResults (widgetWrapper.id, params);
+	// call function for child window
+	//callback(widgetWrapper.widget.results);
+	
+}
+
+/**
+*
+* this function is called by the HTML page of an HTMLWidget to upload a file
+*
+* @param child child window
+* 
+*/
+
+function getResultsForForm (child, params){
+	// get the child window's url, and compare with URLs of all HTMLWidgets
+	// to identify the specific child
+	var widgetWrapper = m_Controller.identifyChildIFrame (child);
+	// refresh the page
+	m_Controller.getResultsForForm (widgetWrapper.id, params);
+	// call function for child window
+	//callback(widgetWrapper.widget.results);
+}
+
+function triggerFilterPopulate(source_filter_id,name,value,target_filter_id)
+{
+	//alert("source="+source_filter_id+"name="+name+"value="+value+"target="+target_filter_id);
+	//alert("yes");
+	var additionalParams = new Object();
+	additionalParams[name]=value;
+	//alert("additionalParams="+JSON.stringify(additionalParams));
+	m_Controller.populateFilterParams(null,target_filter_id, additionalParams);
+}

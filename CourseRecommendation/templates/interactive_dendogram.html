@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<style>
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+.node text {
+  font: 12px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
+
+</style>
+
+<body style="overflow:auto;" class="theme_1"  background=" {{ url_for('static', filename='background_image.jpg') }} ">
+
+<div class="head-top" style="background-color: #20afdd; overflow: hidden; margin-bottom:1%">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <link rel="newest StyleSheet" href="{{ url_for('static', filename='main.css') }}" type="text/css" media="all">
+
+    <div class="row">
+    <div class="brand-name pull-left col-md-3">
+
+      <img src="{{ url_for('static', filename='jefferson_brand_logo.png') }} " style="height:50px;padding:5px;float:left">
+      </div>
+      <div id="titleDiv" class="display-4 col" style="font-size: 3.5rem;font-weight: 300;line-height: 1.2;">ENTERPRISE ANALYTICS PORTAL</div>
+      <div class=" col-md-3">
+      <div id="rightImageDiv" class="pull-right wellness">
+        <div id="homePageImageDiv">
+          <a id="homePageLink" href="#">
+          <div id="homeIcon" title="Home"></div>
+          <img id="homePageImage"> 
+          </a>
+          
+        </div>
+      </div>
+      </div>
+    </div>
+      
+    </div>
+
+    <div id="svg_div" class="text-center">
+    </div>
+
+<!-- load the d3.js library -->	
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='d3-v4-contextmenu.js') }} "></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<script>
+
+var treeDataString = {
+  "name": "Top Level",
+  "children": [
+    {
+      "name": "Ambulatory Data",
+      "children": [
+        {
+          "name": "PATIENT",
+          "children": [
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "PROVIDER_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PROVIDER",
+          "children": [
+            {
+              "name": "PROVIDER_MIDDLE_NAME",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ENCOUNTER INFORMATION",
+          "children": [
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "BIOMETRICS",
+          "children": [
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ENCOUNTER DIAGNOSIS ",
+          "children": [
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ACTIVE PROBLEM LIST ",
+          "children": [
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "ENCOUNTER_ID or VISIT_NUMBER",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PAST MEDICAL HISTORY",
+          "children": [
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            },
+            {
+              "name": "ENC_DATE or VISIT_DATE or DATE_OF_SERVICE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PAST SURGICAL HISTORY",
+          "children": [
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "AUTH_PROVIDER_NPI ",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "SOCIAL HISTORY",
+          "children": [
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "ENC_PROVIDER_NPI",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ALLERGIES",
+          "children": [
+            {
+              "name": "ALLERGEN_NOKNOWN_INDICATOR",
+              "trust": 0
+            },
+            {
+              "name": "IMMUNIZATION_CPT_CODE",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_NAME",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PROC_NAME ",
+              "trust": 0
+            },
+            {
+              "name": "MEDICATION_NAME",
+              "trust": 0
+            },
+            {
+              "name": "NOTE_ENCOUNTER_INFORMATION",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "IMMUNIZATIONS",
+          "children": [
+            {
+              "name": "IMMUNIZATION_DESC",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "PROC_ORDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "MED_ORDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "NOTE_PROV_NAME",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ORDERS",
+          "children": [
+            {
+              "name": "ORDER_CODE",
+              "trust": 0
+            },
+            {
+              "name": "OBSERVATION_ID or LAB_RESULT_ID",
+              "trust": 0
+            },
+            {
+              "name": "PROC_DATE",
+              "trust": 0
+            },
+            {
+              "name": "MED_ORDER_DATE",
+              "trust": 0
+            },
+            {
+              "name": "NOTE_PROV_CREDENTIALS",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "LAB RESULTS ",
+          "children": [
+            {
+              "name": "LNC_ID ",
+              "trust": 0
+            },
+            {
+              "name": "PROCEDURE_CODE",
+              "trust": 0
+            },
+            {
+              "name": "NDC_CODE",
+              "trust": 0
+            },
+            {
+              "name": "NOTE_PROV_NPI",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PROCEDURE/TREATMENT  RESULTS ",
+          "children": [
+            {
+              "name": "PROCEDURE_CODE_STANDARD",
+              "trust": 0
+            },
+            {
+              "name": "GPI_CODE",
+              "trust": 0
+            },
+            {
+              "name": "NOTE_TIMESTAMP",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "MEDICATIONS",
+          "children": [
+            {
+              "name": "RX_DAW",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PROGRESS NOTES",
+          "children": []
+        },
+        {
+          "name": "PATIENT",
+          "children": []
+        },
+        {
+          "name": "IN-PATIENT PROVIDER(S)",
+          "children": []
+        },
+        {
+          "name": "IN-PATIENT ADMISSION INFORMATION",
+          "children": []
+        },
+        {
+          "name": "ADMISSION  NOTE",
+          "children": []
+        },
+        {
+          "name": "HOSPITAL BASED PROBLEM LIST",
+          "children": []
+        },
+        {
+          "name": "PAST MEDICAL HISTORY",
+          "children": []
+        },
+        {
+          "name": "PAST SURGICAL HISTORY",
+          "children": []
+        },
+        {
+          "name": "SOCIAL HISTORY",
+          "children": []
+        },
+        {
+          "name": "ALLERGIES",
+          "children": []
+        },
+        {
+          "name": "IMMUNIZATIONS",
+          "children": []
+        },
+        {
+          "name": "MEDICATION ADMINISTRATION RECORD",
+          "children": []
+        },
+        {
+          "name": "CONSULT NOTES",
+          "children": []
+        },
+        {
+          "name": "ORDERS",
+          "children": []
+        },
+        {
+          "name": "LAB RESULTS",
+          "children": []
+        },
+        {
+          "name": "PROCEDURE/TREATMENT RESULTS",
+          "children": []
+        },
+        {
+          "name": "DISCHARGE INFORMATION",
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "Inpatient Data",
+      "children": [
+        {
+          "name": "PATIENT",
+          "children": [
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            },
+            {
+              "name": "INSURANCE_MEMBER_ID_NO",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PROVIDER",
+          "children": [
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_MIDDLE_NAME",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_RECORD_NO",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ENCOUNTER INFORMATION",
+          "children": [
+            {
+              "name": "PATIENT_ID",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "BIOMETRICS",
+          "children": [
+            {
+              "name": "PATIENT_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_SUFFIX_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ENCOUNTER DIAGNOSIS ",
+          "children": [
+            {
+              "name": "PATIENT_MIDDLE_NAME",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_CREDENTIALS",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ACTIVE PROBLEM LIST ",
+          "children": [
+            {
+              "name": "PATIENT_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ENCOUNTER_ID or HOSP_VISIT_NUMBER",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PAST MEDICAL HISTORY",
+          "children": [
+            {
+              "name": "PATIENT_SUFFIX_NAME",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            },
+            {
+              "name": "ADMISSION_DT",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PAST SURGICAL HISTORY",
+          "children": [
+            {
+              "name": "BIRTH_DATE",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_SPECIALTY_CODE",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ATTEND_PROVIDER_NPI",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "SOCIAL HISTORY",
+          "children": [
+            {
+              "name": "HOME_ADDRESS_1",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_SPECIALTY_DESC",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ADMIT_TYPE_CODE",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ADMITTING_PROVIDER_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "DX_CODE",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_HX",
+              "trust": 0
+            },
+            {
+              "name": "SURGICAL_HX",
+              "trust": 0
+            },
+            {
+              "name": " SOCIAL HISTORY",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGEN_NOKNOWN_INDICATOR",
+              "trust": 0
+            },
+            {
+              "name": "IMMUNIZATION_CPT_CODE",
+              "trust": 0
+            },
+            {
+              "name": "MEDICATION_NAME",
+              "trust": 0
+            },
+            {
+              "name": "CONSULT_DT ",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_NAME or PROCEDURE_NAME ",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_NAME",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_NAME",
+              "trust": 0
+            },
+            {
+              "name": "DISCHARGE_DATE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ALLERGIES",
+          "children": [
+            {
+              "name": "HOME_ADDRESS_2",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_MAIN_ADDRESS_1",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ADMIT_TYPE_DESC",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ADMITTING_PROVIDER_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "DX_DESC ",
+              "trust": 0
+            },
+            {
+              "name": "DX_CODE ",
+              "trust": 0
+            },
+            {
+              "name": "DX_CODE_STANDARD or DX_CODE ",
+              "trust": 0
+            },
+            {
+              "name": "SOCIAL_HX",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGEN_NAME",
+              "trust": 0
+            },
+            {
+              "name": "IMMUNIZATION_DESC",
+              "trust": 0
+            },
+            {
+              "name": "MED_ORDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "CONSULTING_PROVIDER_FIRST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_ID or         PROCEDURE_ID ",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_NAME",
+              "trust": 0
+            },
+            {
+              "name": "PROC_NAME ",
+              "trust": 0
+            },
+            {
+              "name": "WEIGHT",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "IMMUNIZATIONS",
+          "children": [
+            {
+              "name": "HOME_CITY",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_MAIN_ADDRESS_2",
+              "trust": 0
+            },
+            {
+              "name": "HOSPITAL_SERVICE_C",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ADMITTING_PROVIDER_CREDENTIALS",
+              "trust": 0
+            },
+            {
+              "name": "DX_CODE_STANDARD or                                  DX_ LINK_PROB_ID_ICD10",
+              "trust": 0
+            },
+            {
+              "name": "ICD-10 for encounters > 10/2015",
+              "trust": 0
+            },
+            {
+              "name": "SURGICAL_HX_DATE",
+              "trust": 0
+            },
+            {
+              "name": "SOCIAL_HX_DATE",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGEN_TYPE",
+              "trust": 0
+            },
+            {
+              "name": "CVX_CODE ",
+              "trust": 0
+            },
+            {
+              "name": "NDC_CODE",
+              "trust": 0
+            },
+            {
+              "name": "CONSULTING_PROVIDER_LAST_NAME",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_CODE",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "PROC_ORDER_ID",
+              "trust": 0
+            },
+            {
+              "name": "WT_UNIT_OF_MEASURE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ORDERS",
+          "children": [
+            {
+              "name": "HOME_STATE",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_MAIN_CITY",
+              "trust": 0
+            },
+            {
+              "name": "REG_IN_SVC_AREA_ID",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_ADMITTING_PROVIDER_NPI",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PBL_POA",
+              "trust": 0
+            },
+            {
+              "name": "DX_CODE_STANDARD",
+              "trust": 0
+            },
+            {
+              "name": "SURGICAL_HX_COMMENT",
+              "trust": 0
+            },
+            {
+              "name": "SOCIAL_HX_TYPE",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGY_REACTION_DESCRIPTION",
+              "trust": 0
+            },
+            {
+              "name": "MVX_CODE ",
+              "trust": 0
+            },
+            {
+              "name": "MAR_ADMIN_ DATE ",
+              "trust": 0
+            },
+            {
+              "name": "CONSULTING_PROVIDER_NPI ",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_CODE_STANDARD",
+              "trust": 0
+            },
+            {
+              "name": "OBSERVATION_ID or LAB_RESULT_ID",
+              "trust": 0
+            },
+            {
+              "name": "PROC_DATE",
+              "trust": 0
+            },
+            {
+              "name": "BMI",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "LAB RESULTS ",
+          "children": [
+            {
+              "name": "HOME_ZIP",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_MAIN_STATE",
+              "trust": 0
+            },
+            {
+              "name": "BED_CHARGE_UNIT_ID",
+              "trust": 0
+            },
+            {
+              "name": "ADMIT_NOTE  or IP_NOTES_HP",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PBL_ONSET_DT",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_HX_COMMENT or ISSUE_DESCRIPTION",
+              "trust": 0
+            },
+            {
+              "name": "PSH_REV_DATE",
+              "trust": 0
+            },
+            {
+              "name": "SOCIAL_HX_USE",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGY_REACTION_TYPE",
+              "trust": 0
+            },
+            {
+              "name": "SNOMED_ CID",
+              "trust": 0
+            },
+            {
+              "name": "MAR_ADMIN_TIME ",
+              "trust": 0
+            },
+            {
+              "name": "CONSULTING_PROVIDER_CREDENTIALS",
+              "trust": 0
+            },
+            {
+              "name": "ORDERING_DATE",
+              "trust": 0
+            },
+            {
+              "name": "LNC_ID ",
+              "trust": 0
+            },
+            {
+              "name": "PROCEDURE_CODE",
+              "trust": 0
+            },
+            {
+              "name": "BP_DIASTOLIC",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PROCEDURE/TREATMENT  RESULTS ",
+          "children": [
+            {
+              "name": "DECEASED_DATE",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_MAIN_ZIP",
+              "trust": 0
+            },
+            {
+              "name": "HEIGHT",
+              "trust": 0
+            },
+            {
+              "name": "NOTE_TIMESTAMP",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PBL_RESOLVED",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_HX_RECORDED_DATE",
+              "trust": 0
+            },
+            {
+              "name": "ALCOHOL",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGY_RECORD_DATE",
+              "trust": 0
+            },
+            {
+              "name": "SNOMED_ FSN",
+              "trust": 0
+            },
+            {
+              "name": "MAR_DOSE",
+              "trust": 0
+            },
+            {
+              "name": "IP_NOTES_CONSULTS",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_TYPE",
+              "trust": 0
+            },
+            {
+              "name": "LNC_DESC ",
+              "trust": 0
+            },
+            {
+              "name": "PROCEDURE_CODE_STANDARD",
+              "trust": 0
+            },
+            {
+              "name": "BP_SYSTOLIC",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PROGRESS NOTES",
+          "children": [
+            {
+              "name": "GENDER_CODE",
+              "trust": 0
+            },
+            {
+              "name": "HOSP_PROVIDER_MAIN_PHONE",
+              "trust": 0
+            },
+            {
+              "name": "HT_UNIT_OF_MEASURE",
+              "trust": 0
+            },
+            {
+              "name": "PROB_LIST_COMMENT",
+              "trust": 0
+            },
+            {
+              "name": "MEDICAL_HX_ONSET_DATE",
+              "trust": 0
+            },
+            {
+              "name": "ALCOHOL_USE_C",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGY_STATUS",
+              "trust": 0
+            },
+            {
+              "name": "HISTORICAL_IMMUNIZATION_INDICATOR",
+              "trust": 0
+            },
+            {
+              "name": "MAR_ROUTE_C",
+              "trust": 0
+            },
+            {
+              "name": "NOTE_TIMESTAMP",
+              "trust": 0
+            },
+            {
+              "name": "ORDERING_COMMENT",
+              "trust": 0
+            },
+            {
+              "name": "SNOMED_ CID",
+              "trust": 0
+            },
+            {
+              "name": "RESULT_DATE",
+              "trust": 0
+            },
+            {
+              "name": "DISCHARGE_DX_CODE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PATIENT",
+          "children": [
+            {
+              "name": "GENDER_DESC",
+              "trust": 0
+            },
+            {
+              "name": "WEIGHT",
+              "trust": 0
+            },
+            {
+              "name": "PROB_LIST_REV_DATE",
+              "trust": 0
+            },
+            {
+              "name": "ISSUE_ENDED_DATE",
+              "trust": 0
+            },
+            {
+              "name": "ALCOHOL_OZ_PER_WEEK or ALCOHOL_DRINKS_WK",
+              "trust": 0
+            },
+            {
+              "name": "COMMENTS",
+              "trust": 0
+            },
+            {
+              "name": "ADMINISTRATION_DATE",
+              "trust": 0
+            },
+            {
+              "name": "MAR_COMMENT",
+              "trust": 0
+            },
+            {
+              "name": "ASSOC_DX_ID",
+              "trust": 0
+            },
+            {
+              "name": "SNOMED_ FSN",
+              "trust": 0
+            },
+            {
+              "name": "PROCEDURE_TYPE",
+              "trust": 0
+            },
+            {
+              "name": "DX_DESC ",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "IN-PATIENT PROVIDER(S)",
+          "children": [
+            {
+              "name": "WT_UNIT_OF_MEASURE",
+              "trust": 0
+            },
+            {
+              "name": "CHRONIC_PROB_FLAG",
+              "trust": 0
+            },
+            {
+              "name": "PMH_REV_DATE",
+              "trust": 0
+            },
+            {
+              "name": "ALCOHOL_COMMENT",
+              "trust": 0
+            },
+            {
+              "name": "ALLERGY_REV_DATE",
+              "trust": 0
+            },
+            {
+              "name": "REFUSAL_REAS0N_CODE",
+              "trust": 0
+            },
+            {
+              "name": "MAR_REASON_C",
+              "trust": 0
+            },
+            {
+              "name": "ASSOC_DX_DESC",
+              "trust": 0
+            },
+            {
+              "name": "COLLECTION_DATE",
+              "trust": 0
+            },
+            {
+              "name": "PROCEDURE_RESULT_STATUS ",
+              "trust": 0
+            },
+            {
+              "name": "DX_CODE_STANDARD",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "IN-PATIENT ADMISSION INFORMATION",
+          "children": [
+            {
+              "name": "BMI",
+              "trust": 0
+            },
+            {
+              "name": "SMOKING CESSATION",
+              "trust": 0
+            },
+            {
+              "name": "REFUSAL_REASON_DESC",
+              "trust": 0
+            },
+            {
+              "name": "PAT_SUPPLIED_C",
+              "trust": 0
+            },
+            {
+              "name": "ORD_SPEC_QUESTN or ORDER_QUESN_LIST",
+              "trust": 0
+            },
+            {
+              "name": "RESULT_STATUS or LAB_STATUS or ORDER_STATUS",
+              "trust": 0
+            },
+            {
+              "name": "RESULT_VALUE ",
+              "trust": 0
+            },
+            {
+              "name": "PRIMARY_INDICATOR",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ADMISSION  NOTE",
+          "children": [
+            {
+              "name": "SMOKING_STATUS",
+              "trust": 0
+            },
+            {
+              "name": "COMMENTS",
+              "trust": 0
+            },
+            {
+              "name": "ORD_SPEC_RESPONSE",
+              "trust": 0
+            },
+            {
+              "name": "RESULT_DATE",
+              "trust": 0
+            },
+            {
+              "name": "RESULT_DESCRIPTION",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_NAME",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "HOSPITAL BASED PROBLEM LIST",
+          "children": [
+            {
+              "name": "USE_ITEMS",
+              "trust": 0
+            },
+            {
+              "name": "SPECIMEN_TYPE",
+              "trust": 0
+            },
+            {
+              "name": "ABNORMAL",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_ID",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PAST MEDICAL HISTORY",
+          "children": [
+            {
+              "name": "USE_YEARS",
+              "trust": 0
+            },
+            {
+              "name": "RESULT_COMPONENT_NAME ",
+              "trust": 0
+            },
+            {
+              "name": "COMMENTS",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_CODE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PAST SURGICAL HISTORY",
+          "children": [
+            {
+              "name": "USE_QUIT_DATE",
+              "trust": 0
+            },
+            {
+              "name": "RESULT_VALUE ",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_CODE_STANDARD",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "SOCIAL HISTORY",
+          "children": [
+            {
+              "name": "SMOKING _COMMENTS ",
+              "trust": 0
+            },
+            {
+              "name": "UNIT_OF_MEASURE",
+              "trust": 0
+            },
+            {
+              "name": "ORDERING_DATE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ALLERGIES",
+          "children": [
+            {
+              "name": "RESULT_DESCRIPTION",
+              "trust": 0
+            },
+            {
+              "name": "ORDER_TYPE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "IMMUNIZATIONS",
+          "children": [
+            {
+              "name": "ABNORMAL",
+              "trust": 0
+            },
+            {
+              "name": "ORDERING_COMMENT",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "MEDICATION ADMINISTRATION RECORD",
+          "children": [
+            {
+              "name": "ASSOC_DX_ID",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "CONSULT NOTES",
+          "children": [
+            {
+              "name": "ASSOC_DX_DESC",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "ORDERS",
+          "children": [
+            {
+              "name": "MEDICATION_NAME",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "LAB RESULTS",
+          "children": [
+            {
+              "name": "MED_ORDER_ID",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "PROCEDURE/TREATMENT RESULTS",
+          "children": [
+            {
+              "name": "MED_ORDER_DATE",
+              "trust": 0
+            }
+          ]
+        },
+        {
+          "name": "DISCHARGE INFORMATION",
+          "children": [
+            {
+              "name": "NDC_CODE",
+              "trust": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+
+
+
+// console.log( treeData);
+
+// var treeDataString = {{ list_df|tojson }} ;
+console.log(  treeDataString );
+var treeData = treeDataString;
+
+
+// Set the dimensions and margins of the diagram
+var margin = {top: 20, right: 90, bottom: 30, left: 90},
+    width = window.innerWidth - margin.left - margin.right,
+    height = window.innerHeight - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+// appends a 'group' element to 'svg'
+// moves the 'group' element to the top left margin
+var svg = d3.select("#svg_div").append("svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate("
+          + margin.left + "," + margin.top + ")");
+
+var i = 0,
+    duration = 750,
+    root;
+
+// declares a tree layout and assigns the size
+var treemap = d3.tree().size([height, width]);
+
+// Assigns parent, children, height, depth
+root = d3.hierarchy(treeData, function(d) { return d.children ; });
+root.x0 = height / 2;
+root.y0 = 0;
+
+// Collapse after the second level
+root.children.forEach(collapse);
+
+update(root);
+
+// Collapse the node and all it's children
+function collapse(d) {
+  if(d.children) {
+    d._children = d.children
+    d._children.forEach(collapse)
+    d.children = null
+  }
+}
+
+function update(source) {
+
+  
+  // Assigns the x and y position for the nodes
+  var treeData = treemap(root);
+
+  window.addEventListener('beforeunload', function (e) {
+  // Cancel the event
+  e.preventDefault();
+  console.log(treeData);
+  // JSON.stringify(treeData)
+  var xhr = new XMLHttpRequest();
+                  xhr.open("POST", "save_json", true);
+                  xhr.setRequestHeader('Content-Type', 'application/json');
+                  xhr.send(JSON.stringify({
+                    data: "DATA FOR JSON"
+                    }));                  
+
+
+});
+
+  // Compute the new tree layout.
+  var nodes = treeData.descendants(),
+      links = treeData.descendants().slice(1);
+
+  // Normalize for fixed-depth.
+  nodes.forEach(function(d){ d.y = d.depth * 180});
+
+  // ****************** Nodes section ***************************
+
+  // Update the nodes...
+  var node = svg.selectAll('g.node')
+      .data(nodes, function(d) {return d.id || (d.id = ++i); });
+
+  // Enter any new modes at the parent's previous position.
+  var nodeEnter = node.enter().append('g')
+      .attr('class', 'node')
+      .attr("transform", function(d) {
+        return "translate(" + source.y0 + "," + source.x0 + ")";
+    })
+    .on('click', click)
+    ;
+
+
+    var items = [
+    {
+      label: "Node",
+      items: [
+        {
+          label: "Red",
+          onClick: function (d) {
+            this.style.fill = "red";
+            d.data.trust = -1;
+            console.log(d.data.trust);
+
+          }
+        },
+        {
+          label: "Blue",
+          action: function (d) {
+            this.style.fill = "#0000ff";
+            d.data.trust = 1;
+            console.log(d.data.trust);
+
+
+          }
+        },
+        {
+          label: "Green",
+          action: function (d) {
+            this.style.fill = "green";
+            d.data.trust = 3;
+            console.log(d.data.trust);
+
+
+          }
+        },
+        {
+          label: "Gold",
+          action: function (d) {
+            this.style.fill = "gold";
+            d.data.trust = 2;
+            console.log(d.data.trust);
+
+          }
+        }
+      ]
+    }  ];
+
+
+
+  // Add Circle for the nodes
+  nodeEnter.append('circle')
+      .attr('class', 'node')
+      .attr('r', 1e-6)
+      .style("fill", function(d) {
+          var color = ""
+          if (d.data.trust == 3){
+            color = "green";
+          } else if (d.data.trust == -1){
+            color = 'red';
+          } else if (d.data.trust == 1){
+            color = 'blue';
+          } else if (d.data.trust == 2){
+            color = 'gold';
+          }
+          return color;
+      })
+      .on('contextmenu', d3.contextmenu(items))
+      .data("Node")
+      ;
+
+  // Add labels for the nodes
+  nodeEnter.append('text')
+      .attr("dy", ".35em")
+      .attr("x", function(d) {
+          return d.children || d._children ? -13 : 13;
+      })
+      .attr("text-anchor", function(d) {
+          return d.children || d._children ? "end" : "start";
+      })
+      .text(function(d) { return d.data.name; })
+      .style("font-size", function(d) { return Math.min(2 * d.r, (2 * d.r - 8) / this.getComputedTextLength() * 24) + "px"; });
+
+  // UPDATE
+  var nodeUpdate = nodeEnter.merge(node);
+
+  // Transition to the proper position for the node
+  nodeUpdate.transition()
+    .duration(duration)
+    .attr("transform", function(d) { 
+        return "translate(" + d.y + "," + d.x + ")";
+     });
+
+  // Update the node attributes and style
+  nodeUpdate.select('circle.node')
+    .attr('r', 10)
+    .style("fill", function(d) {
+          var color = ""
+          if (d.data.trust == 3){
+            color = "green";
+          } else if (d.data.trust == -1){
+            color = 'red';
+          } else if (d.data.trust == 1){
+            color = 'blue';
+          } else if (d.data.trust == 2){
+            color = 'gold';
+          }
+          return color;
+      })
+
+    .attr('cursor', 'pointer');
+
+
+  // Remove any exiting nodes
+  var nodeExit = node.exit().transition()
+      .duration(duration)
+      .attr("transform", function(d) {
+          return "translate(" + source.y + "," + source.x + ")";
+      })
+      .remove();
+
+  // On exit reduce the node circles size to 0
+  nodeExit.select('circle')
+    .attr('r', 1e-6);
+
+  // On exit reduce the opacity of text labels
+  nodeExit.select('text')
+    .style('fill-opacity', 1e-6);
+
+  // ****************** links section ***************************
+
+  // Update the links...
+  var link = svg.selectAll('path.link')
+      .data(links, function(d) { return d.id; });
+
+  // Enter any new links at the parent's previous position.
+  var linkEnter = link.enter().insert('path', "g")
+      .attr("class", "link")
+      .attr('d', function(d){
+        var o = {x: source.x0, y: source.y0}
+        return diagonal(o, o)
+      });
+
+  // UPDATE
+  var linkUpdate = linkEnter.merge(link);
+
+  // Transition back to the parent element position
+  linkUpdate.transition()
+      .duration(duration)
+      .attr('d', function(d){ return diagonal(d, d.parent) });
+
+  // Remove any exiting links
+  var linkExit = link.exit().transition()
+      .duration(duration)
+      .attr('d', function(d) {
+        var o = {x: source.x, y: source.y}
+        return diagonal(o, o)
+      })
+      .remove();
+
+  // Store the old positions for transition.
+  nodes.forEach(function(d){
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
+
+  // Creates a curved (diagonal) path from parent to the child nodes
+  function diagonal(s, d) {
+
+    path = `M ${s.y} ${s.x}
+            C ${(s.y + d.y) / 2} ${s.x},
+              ${(s.y + d.y) / 2} ${d.x},
+              ${d.y} ${d.x}`
+
+    return path
+  }
+
+  // Toggle children on click.
+  function click(d) {
+    console.log(d);
+    
+    if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else {
+        d.children = d._children;
+        d._children = null;
+      }
+    update(d);
+  }
+
+
+  function right_click(d) {
+    d3.event.preventDefault();
+    console.log(d.data.name, d.data.trust);
+    d.data.trust -= 1;
+
+    update(d);
+  }
+
+
+}
+
+</script>
+</body>

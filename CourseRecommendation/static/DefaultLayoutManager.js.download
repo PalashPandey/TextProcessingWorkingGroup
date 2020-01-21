@@ -1,0 +1,437 @@
+/**
+ * 
+ * Default Layout Manager - lays out page
+ * 
+ */
+
+function DefaultLayoutManager() {
+	
+	this.layoutPage = function(app) {
+		this.layoutBanner(app);
+		this.layoutPageSelectionSection(app);
+		this.layoutParameterSelectionScreen(app);
+		this.layoutDashboard(app);
+		};
+
+	this.layoutBanner = function(app) {
+		var banner = $(".head-top");
+		//$(banner).empty();
+
+		// title
+		var image_url=app.properties.image_url;
+		console.log("image url="+image_url);
+		
+		// right image
+		//$(rightImageDiv).attr("class", "right_image");
+		var leftImageDiv = $(document.createElement("div"));
+		//$(leftImageDiv).attr("class", "left_image");
+		/*var rightImage = $(document.createElement("img"));
+		$(rightImage).attr("height", "50px");
+		$(rightImage).attr("src", "../ubaweb/images/XPRESSO.png");
+		$(rightImageDiv).append($(rightImage));
+		$(banner).append($(rightImageDiv));*/
+		var logoImageDiv = $(document.createElement ("div"));
+		$(logoImageDiv).attr("style", "float:left;padding-left:20px");
+		var homePageLink = $(document.createElement("a"));
+		$(homePageLink).attr("href", "../"+app.properties.name+"/");
+		var logoImage = $(document.createElement("img"));
+		$(logoImage).attr("height", "50px");
+		$(logoImage).attr("src", app.properties.image_url);
+		$(logoImage).attr("title", "Home Page");
+		$(homePageLink).append($(logoImage));
+		$(logoImageDiv).append($(homePageLink));
+		$(leftImageDiv).append($(logoImageDiv));
+
+		//$(banner).append($(leftImageDiv));
+		
+		var titleDiv = $("#titleDiv")
+		if (app != null)
+			$(titleDiv).text(app.properties.title);
+		//$(banner).append($(titleDiv));
+
+		// link to Home Page
+		//alert ("Displaying icons");
+		var rightImageDiv = $("#rightImageDiv");
+		//$(rightImageDiv).attr("class", "pull-right");
+		var homePageImageDiv = $("#homePageImageDiv");
+		//$(homePageImageDiv).attr("style", "float:right;padding-right:20px");
+		var homePageLink = $("#homePageLink");
+		$(homePageLink).attr("href", "../ubaweb/index.jsp?app_name=UBAHomePage");
+		//var homePageImage = $("#homePageImage");
+		//$(homePageImage).attr("height", "30px");
+		//$(homePageImage).attr("src", "../ubaweb/images/home.png");
+		//$(homePageImage).attr("title", "Home Page");
+		//$(homePageLink).append($(homePageImage));
+		//$(homePageImageDiv).append($(homePageLink));
+		//$(rightImageDiv).append($(homePageImageDiv));
+		$.get(image_url)
+		.done(function(){
+			console.log("homeImage success");
+			$("#homeIcon").attr("style","display:none");
+			$("#homePageImage").attr("style","display:block");
+			$("#homePageImage").attr("height", "50px");
+			$("#homePageImage").attr("src", app.properties.image_url);
+			$("#homePageImage").attr("title", "Home");
+			
+		})
+		.fail(function(){
+			console.log("homeImage fail");
+			//$("#homePageImage").attr("style","display:block");
+
+		})
+
+		//$(banner).append($(rightImageDiv));
+
+	};
+	
+	this.layoutPageSelectionSection = function(app) {
+		var page_selector = $(".page_selector");
+		$(page_selector).empty();
+
+		var list = $(document.createElement("ul"));
+		$(list).attr("class", "nav nav-tabs responsive");
+		$(list).attr("role", "tablist");
+		var i;
+		for (i = 1; i <= app.pages.length; i++) {
+			console.log("current_page_id="+app.current_page_id);
+			if (i == app.current_page_id) {
+				// active page
+				var active_item = $(document.createElement("li"));
+				$(active_item).attr("class", "active");
+				$(active_item).attr("role", "presentation");
+				var link = $(document.createElement("a"));
+				$(link).attr("href", "#");
+				$(link).attr("role", "tab");
+				$(link).attr("data-toggle", "tab");
+				$(link).text(app.pages[i - 1].properties.name);
+				$(active_item).append($(link));
+				$(list).append($(active_item));
+			} else {
+				// inactive page
+				var inactive_item = $(document.createElement("li"));
+				$(inactive_item).attr("role", "presentation");
+				// $(inactive_item).attr ("class", "inactive");
+				var link = $(document.createElement("a"));
+				$(link).attr("href", "#");
+				$(link).attr("onClick","javascript:m_Controller.app.refreshPage(" + i + ")");
+				$(link).attr("role", "tab");
+				$(link).attr("data-toggle", "tab");				
+				$(link).text(app.pages[i - 1].properties.name);
+				$(inactive_item).append($(link));
+				$(list).append($(inactive_item));
+			}
+		}
+		$(page_selector).append($(list));
+	}
+
+	this.layoutDashboard = function(app) {
+		
+		var page = app.getCurrentPage();
+		var container = $(".tab-pane");
+		
+		// [Arnab] Clear the KPIStrip widget
+		$("#tiles").empty();
+		
+		var url = page.properties.url;
+		$(container).empty();
+
+		if (url == null){
+			var i, k, numwidgets = page.widgets.length;
+			var aNumCols = new Array();
+			if (page.properties.layout != null){
+				aNumCols = page.properties.layout;
+				// add extra layout rows if required
+				var n = 0;
+				for (k = 0; k < aNumCols.length; k ++)
+					n += aNumCols[k];
+				if (n < numwidgets){
+					for (k = 0; k < (numwidgets-n)/2; k ++)
+						aNumCols.push(2);
+					
+				}
+			}
+			else{
+				// default to 2 cols" 
+				var numRows = numwidgets/2;
+				for (k = 0; k < numRows; k ++)
+					aNumCols.push(2);
+			}
+			var rowCount = 0;
+			var rowDiv = $(document.createElement("div"));
+			rowDiv.attr("class", "row");
+			var rowStyle = "-webkit-column-count:" + aNumCols[rowCount] + ";-moz-column-count:" + aNumCols[rowCount] + ";column-count:" + aNumCols[rowCount];
+			rowDiv.attr("style", rowStyle);
+	
+			var count = 0;
+			for (i = 0; i < numwidgets; i++) {
+				
+				var widget = app.getWidget(page.widgets[i]);
+				var visible = widget.properties.visible;
+				var header_panel = widget.properties.header_panel;
+				var body_panel = widget.properties.body_panel;
+				if ((visible == null) || (visible == "true")) {
+					var widgetName = widget.properties.name;
+					var widgetID = widget.id;
+					var panelDiv = $(document.createElement("div"));
+					if (body_panel == null || body_panel == "true")
+						$(panelDiv).attr("class", "panel panel-default content col-sm");
+	
+					if (header_panel == null || header_panel == "true"){
+						var panelHeading = $(document.createElement("div"));
+						$(panelHeading).attr("class", "panel-heading");
+						$(panelHeading).text(widgetName);
+						//$(panelDiv).append($(panelHeading));
+					}
+					
+					var panelBody = $(document.createElement("div"));
+					if (widget.properties.type == "KPIStrip")
+						$(panelBody).attr("class", "panel-body kpistrip");
+					else
+						{$(panelBody).attr("class", "panel-body widgetContainer");
+						if(widget.properties.type=="Grid")
+							{
+							$(panelBody).attr("style", "width:98%;");
+							}
+							
+						}
+					$(panelBody).attr("id", "report_" + widgetID);
+					$(panelDiv).append($(panelBody));
+					if (widget.properties.type != "KPIStrip")
+					{
+						//KPIStrip added in row title_count
+						$(rowDiv).append($(panelDiv));
+					}
+					
+					if ((count + 1) % aNumCols[rowCount] == 0) {
+						$(container).append($(rowDiv));
+						rowCount ++;
+						count = 0;
+						if (i < (numwidgets-1)){
+							rowDiv = $(document.createElement("div"));
+							rowDiv.attr("class", "row");
+							rowStyle = "-webkit-column-count:" + aNumCols[rowCount] + ";-moz-column-count:" + aNumCols[rowCount] + ";column-count:" + aNumCols[rowCount];
+							rowDiv.attr("style", rowStyle);
+						}
+					}
+					else
+						count ++;
+				}
+	
+			}
+			$(container).append ($(rowDiv));
+		}
+		else{
+			// create iframe with url contents
+			var iframe = $(document.createElement("iframe"));
+			//iframe.attr("style", "width:100%;height:500px");
+			iframe.attr ("src", url);
+			iframe.attr ("id", page.properties.name.replace(/ /g,'')+"_frame");
+			$(iframe).on('load', function(){
+				var selected_theme = sessionStorage.getItem('current_theme') || 'theme_1';
+				this.contentWindow.document.getElementsByTagName('body')[0].className += ' '+selected_theme;
+				console.log("top doc123213::", this.contentWindow.document.getElementsByTagName('body'));
+			});
+			$(container).append ($(iframe));
+		}
+			
+	};
+
+	this.layoutParameterSelectionScreen = function(app) {
+		var page = app.getCurrentPage();
+		var filters = $("#filters");
+		$(filters).empty();
+		filters.attr("style", "display:none;");
+		
+		var header = $(document.createElement("div"));
+		$(header).attr("class", "title");
+		//var headertext = $(document.createElement("label"));
+		$(header).text("Filters");
+		//$(header).append($(headertext));
+		$(filters).append($(header));
+
+		var list = $(document.createElement("div"));
+		$(list).attr("class", "holder");
+		$(list).attr("style","max-height:400px;overflow-y:auto;");
+		var i, numfilters = page.filter_params.length;
+		for (i = 0; i < numfilters; i++) {
+			var filter = app.getFilterParam(page.filter_params[i]);
+			/*var item = $(document.createElement("a"));
+			$(item).attr("class", "list-group-item");
+			$(item).text(filter.properties.caption);*/
+			var item = $(document.createElement ("div"));
+			$(item).attr("class", "item has-child");
+
+			var divLink = $(document.createElement ("a"));
+			$(divLink).attr("href", "#");
+			$(divLink).attr("onclick", "$(this).parent().children('div.tree').toggle(300);$(this).parent('.has-child').toggleClass('open', 300);");
+			$(divLink).attr("class", "tree-toggle");
+			//var label = $(document.createElement ("label"));
+			$(divLink).text(filter.properties.caption);
+			var divSign = $(document.createElement ("i"));
+			$(divSign).attr("class", "fa");
+			$(divLink).prepend ($(divSign));
+			//$(divLink).append ($(label));
+			$(item).append($(divLink));
+			
+			var select_panel = $(document.createElement ("div"));
+			$(select_panel).attr ("class", "group tree");
+			$(select_panel).attr ("style", "display:none;");
+			var type = filter.properties.gui_type;
+			if (type == "listbox") {
+				/*var sel = $(document.createElement("select"));
+				$(sel).attr("class", "ddlFont");
+				$(sel).attr("id", "ddlFilterParam");
+				$(sel).attr("name", filter.properties.name);
+				*/
+				var itemDiv = $(document.createElement ("div"));
+				$(itemDiv).attr("class", "item component");
+				var sel = $(document.createElement ("select"));
+				$(sel).attr("class", "form-control");
+				$(sel).attr("name", filter.properties.name);
+				$(sel).attr("id", "filter_"+filter.id);
+				console.log("filter params="+filter.properties.name)
+				if (filter.properties.multiple != null)
+					$(sel).attr ("multiple", "true");
+				
+			/*	if(typeof filter.options != "undefined")
+					{
+					var j, numoptions = filter.options.length;
+				for (j = 0; j < numoptions; j++) {
+					var option = filter.options[j];
+					var opt = $(document.createElement("option"));
+					$(opt).attr("value", option.value);
+					$(opt).text(option.caption);
+					$(sel).append($(opt));
+					}
+					}*/
+				$(itemDiv).append($(sel));
+				
+				$(select_panel).append ($(itemDiv));
+				//$(item).append($(sel));
+			}
+
+			else if (type == "textbox") {
+				var itemDiv = $(document.createElement ("div"));
+				$(itemDiv).attr("class", "item component");
+				var inp = $(document.createElement("input"));
+				$(inp).attr("type", "text");
+				$(inp).attr("name", filter.properties.name);
+				$(inp).attr("value", filter.properties.default_value);
+				$(itemDiv).append($(inp));
+				$(select_panel).append ($(itemDiv));
+			} 
+			else if (type == "date") {
+				
+				var itemDiv = $(document.createElement ("div"));
+				$(itemDiv).attr("class", "item component");
+				var inp = $("<input/>");
+				$(inp).attr("type", "text");
+				$(inp).attr("readonly", "readonly");
+				$(inp).attr("data-type", type);
+				$(inp).attr("data-single", !filter.properties.date_range);
+				$(inp).attr("name", filter.properties.name);
+				$(inp).attr("value", filter.properties.default_value);
+				$(itemDiv).append($(inp));
+				$(select_panel).append ($(itemDiv));
+				
+				$(inp).daterangepicker({
+					"singleDatePicker": !filter.properties.date_range,
+					"autoApply": true,
+					"ranges": {
+						'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+					    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+					    'This Month': [moment().startOf('month'), moment().endOf('month')],
+					    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+					},
+					"opens": "right",
+					"startDate": filter.properties.default_value ? new Date(filter.properties.default_value) : moment().subtract(6, 'days'),
+					"endDate": moment(),
+					"maxDate": moment()
+				}, function(start, end, label) {
+                                   $(inp).val(filter.properties.default_value);
+				   console.log("New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')");
+				}).change();
+				
+			} 
+			else if (type == "textarea component") {
+				var itemDiv = $(document.createElement ("div"));
+				$(itemDiv).attr("class", "item");
+				var ta = $(document.createElement("textarea"));
+				$(ta).attr("name", filter.properties.name);
+				$(ta).attr("value", filter.properties.default_value);
+				$(itemDiv).append($(ta));
+				$(select_panel).append ($(itemDiv));
+			}
+			else if (type == "checkbox")
+				{
+				$(select_panel).attr("id", "filter_"+filter.id);
+
+				
+				//var sel = $(document.createElement ("a"));
+				//$(sel).attr("href", "#");
+				//$(sel).attr("name", filter.properties.name);
+				//$(sel).attr("style", "display:block;");
+				//if (filter.properties.multiple != null)
+					//$(sel).attr ("multiple", "true");
+				/*if(typeof filter.options != "undefined")
+				{
+					var j, numoptions = filter.options.length;
+					for (j = 0; j < numoptions; j++) {
+						var itemDiv = $(document.createElement ("div"));
+						$(itemDiv).attr("class", "item component");
+						var option = filter.options[j];
+						var opt = $(document.createElement("a"));
+						//$(opt).attr("class", "item");
+						//$(opt).attr("value", option.value);
+						//var optChild = $(document.createElement("label"));
+						$(opt).text(option.caption);
+						$(opt).attr("href","#");
+						//$(opt).append($(optChild));
+						$(itemDiv).append($(opt));
+						$(select_panel).append ($(itemDiv));
+					}
+				}				
+*/
+				//$(itemDiv).append ($(sel));
+				//$(item).append($(sel));
+				}
+			$(item).append ($(select_panel));
+			$(list).append($(item));
+		}
+
+		$(filters).append($(list));
+
+		if (numfilters > 0) {
+			var updDiv = $(document.createElement("div"));
+			$(updDiv).attr("class", "item update-btn");
+			var upd = $(document.createElement("a"));
+			$(upd).attr("id",
+			"update");
+			//$(upd).attr("id", "update");
+			$(upd).attr("href", "#");
+			$(upd).attr("onClick",
+					"javascript:m_Controller.getResults()");
+			var upd_link = $(document.createElement("i"));
+			//$(upd_link).attr("class", "fa fa-cogs");
+			$(upd_link).attr("class", "fa");
+			//$(upd_link).attr("aria-hidden", "true");
+			$(upd_link).text("Update Dashboard");
+			$(upd).append($(upd_link));
+			$(updDiv).append($(upd));
+			$(filters).append($(updDiv));
+			console.log("filters added");
+			/*var exc = $(document.createElement("a"));
+			$(exc).attr("class", "list-group-item pointer");
+			$(exc).attr("onClick", "javascript:m_Controller.getExcelData()");
+			var exc_link = $(document.createElement("i"));
+			$(exc_link).attr("class", "fa fa-download");
+			$(exc_link).attr("aria-hidden", "true");
+			$(exc_link).text("Download Excel");
+			$(exc).append($(exc_link));
+			$(filters).append($(exc));*/
+		}
+
+		//$(filters).BootSideMenu({		side : "left",		autoClose : false	});
+				
+	};
+};
