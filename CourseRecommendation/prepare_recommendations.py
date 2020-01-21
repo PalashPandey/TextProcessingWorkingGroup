@@ -145,7 +145,7 @@ def get_recommendations(title, cosine_sim=tf_idf_cosine_sim):
 
         # Get the movie indices
         movie_indices = [i[0] for i in sim_scores]
-        final_recommendations =  course_df[['CourseID'] ].iloc[movie_indices]['CourseID'].values
+        final_recommendations =  course_df[['CourseID'] ].iloc[movie_indices]['CourseID'].values.tolist()
         print(final_recommendations)
         # Return the top 10 most similar movies
     except Exception as e:
@@ -163,4 +163,4 @@ def get_recommendations(title, cosine_sim=tf_idf_cosine_sim):
 
 course_df["Top10Recommendations"] = course_df["CourseID"].apply(lambda x : get_recommendations(x, tf_idf_cosine_sim) )
 
-course_df.to_csv('course_df.csv')
+course_df.to_csv('course_df.csv', sep = '\t' )
