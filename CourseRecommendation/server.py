@@ -7,7 +7,7 @@ from pandas.io.json import json_normalize
 import csv
 from collections import defaultdict
 import json
-
+import ast
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config['SECRET_KEY'] = b'_5#y2L"F4Q8z\n\xec]/'
@@ -19,10 +19,14 @@ def test_html():
 
 
 #We will render the html page
-@app.route('/background_query')
+@app.route('/background_query', methods=['GET', 'POST'] )
 def get_course_id():
-	course_id = request.args.get('course_id',0,type=str)
-	return course_id.upper()
+	course_id = request.data
+	result_list = query_csv(course_id)
+	result_json = return_JSON(result_list)
+	return result_json
+
+
 
 def query_csv(course_id):
 	csv_url = 'https://raw.githubusercontent.com/PalashPandey/TextProcessingWorkingGroup/master/CourseRecommendation/static/course_df.csv'
