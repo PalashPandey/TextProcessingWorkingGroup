@@ -163,4 +163,4 @@ def get_recommendations(title, cosine_sim=tf_idf_cosine_sim):
 
 course_df["Top10Recommendations"] = course_df["CourseID"].apply(lambda x : get_recommendations(x, tf_idf_cosine_sim) )
 
-course_df.to_csv('course_df.csv', sep = '|' )
+course_df.to_csv('course_df_pipe.csv', sep = '|' , index=False)
