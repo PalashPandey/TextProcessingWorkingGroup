@@ -21,25 +21,39 @@ def test_html():
 #We will render the html page
 @app.route('/background_query', methods=['GET', 'POST'] )
 def get_course_id():
-	course_id = request.data
-	result_list = query_csv(course_id)
+	print(request.args.get('course_name', "INFO 151", type=str) )
+	# print(ast.literal_eval(request.data.decode("utf-8", "ignore"))["course_name"] )
+	course_id = request.args.get('course_name', "INFO 151", type=str)
+	result_list = query_csv(course_id.upper())
+	print(result_list)
 	result_json = return_JSON(result_list)
 	return result_json
 
 
+csv_url = 'https://raw.githubusercontent.com/PalashPandey/TextProcessingWorkingGroup/master/CourseRecommendation/static/course_df_pipe.csv'
+df = pd.read_csv(csv_url,sep='|')
 
 def query_csv(course_id):
-	csv_url = 'https://raw.githubusercontent.com/PalashPandey/TextProcessingWorkingGroup/master/CourseRecommendation/static/course_df.csv'
-	df = pd.read_csv(csv_url,sep='\t')
 	course_name = (df.loc[df['CourseID']==course_id]['CourseName'])
 	course_description = (df.loc[df['CourseID']==course_id]['DescriptionBlock'])
-	credits = (df.loc[df['CourseID']==course_id]['Credits'])[0]
+	print(float(df.loc[df['CourseID']==course_id]['Credits'].values[0]))
+
+	credits = float(df.loc[df['CourseID']==course_id]['Credits'].values[0])
 	course_name = str(course_name.tolist()[0])
 	course_description = str(course_description.tolist()[0])
+	print(course_name)
+
 	final_list = (df.loc[df['CourseID'] == course_id]['Top10Recommendations'])
-	final_list = ast.literal_eval(final_list[0])
+
+	print(ast.literal_eval(final_list.values[0]))
+
+	final_list = ast.literal_eval(final_list.values[0])
+	final_list_with_json = []
+	for course in final_list:
+		final_list_with_json.append({"CourseID": course,"courseName": str(df.loc[df['CourseID']==course]['CourseName'].tolist()[0])  ,"courseDescription": str(df.loc[df['CourseID']==course]['DescriptionBlock'].tolist()[0]) ,"credits": float(df.loc[df['CourseID']==course]['Credits'].values[0]) }
+)
 	#return course_name,final_list
-	return [course_id,course_name,course_description,str(credits),str(final_list)]
+	return [course_id,course_name,course_description,str(credits),final_list_with_json]
 
 
 def return_JSON(parse_list):
@@ -51,4 +65,4 @@ def return_JSON(parse_list):
 
 
 if __name__ == '__main__':
-	app.run(debug=True, port=55 )
+	app.run(debug=True, port=30 )
